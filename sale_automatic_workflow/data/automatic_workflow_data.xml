@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
+  sale_automatic_workflow for OpenERP
   Copyright (C) 2011 Akretion Sébastien BEAU <sebastien.beau@akretion.com>
-  License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
+  The licence is in the file __openerp__.py
 -->
 
 <odoo noupdate="1">
@@ -37,7 +38,7 @@
     <record id="automatic_workflow_sale_done_filter" model="ir.filters">
         <field name="name">Automatic Workflow Sale Done Filter</field>
         <field name="model_id">sale.order</field>
-        <field name="domain">[('state', '=', 'sale'),('invoice_status','=','invoiced')]</field>
+        <field name="domain">[('state', '=', 'sale'),('invoice_status','=','invoiced'),('all_qty_delivered', '=', True)]</field>
         <field name="user_id" ref="base.user_root"/>
     </record>
 
