@@ -22,7 +22,7 @@
 {
     "name": "Sale Amendment",
     # description is in README.rst
-    "version": "0.1",
+    "version": "8.0.1.0.1",
     "depends": ["sale_stock",
                 "stock_split_picking",
                 ],
