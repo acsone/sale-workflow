@@ -2,8 +2,8 @@
 # © 2016 Cédric Pigeon, ACSONE SA/NV (<http://acsone.eu>)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from openerp import models, fields, api
-import openerp.addons.decimal_precision as dp
+from odoo import models, fields, api
+import odoo.addons.decimal_precision as dp
 
 
 class SaleImportProducts(models.TransientModel):
@@ -36,24 +36,14 @@ class SaleImportProducts(models.TransientModel):
 
     @api.model
     def _get_line_values(self, sale, item):
-        onchange_f = self.env['sale.order.line']._model.product_id_change
-
-        vals = onchange_f(self.env.cr, self.env.uid, [],
-                          sale.pricelist_id.id,
-                          item.product_id.id, qty=item.quantity,
-                          uom=item.product_id.uom_po_id.id,
-                          partner_id=sale.partner_id.id,
-                          date_order=sale.date_order,
-                          fiscal_position=sale.fiscal_position.id,
-                          context=self.env.context)
-        if 'value' in vals:
-            taxes = vals['value']['tax_id']
-            vals['value'].update({'order_id': sale.id,
-                                  'product_id': item.product_id.id,
-                                  'product_uom_qty': item.quantity,
-                                  'tax_id': [(6, 0, taxes)]})
-            vals = vals['value']
-        return vals
+        return {
+            'order_id': sale.id,
+            'name': item.product_id.name,
+            'product_id': item.product_id.id,
+            'product_uom_qty': item.quantity,
+            'product_uom': item.product_id.uom_id.id,
+            'price_unit': item.product_id.list_price
+        }
 
     @api.multi
     def select_products(self):
@@ -79,7 +69,6 @@ class SaleImportProductsItem(models.TransientModel):
                                  comodel_name='product.product',
                                  required=True)
     quantity = fields.Float(string='Quantity',
-                            digits_compute=dp.get_precision(
-                                'Product Unit of Measure'),
+                            digits=dp.get_precision('Product Unit of Measure'),
                             default=1.0,
                             required=True)
