@@ -2,9 +2,9 @@
    :target: http://www.gnu.org/licenses/agpl-3.0-standalone.html
    :alt: License: AGPL-3
 
-==============
+==============================
 Sale Invoice Automatic Deliver
-==============
+==============================
 
 The goal of this module is to automatically deliver products when an user create an invoice.
 On Sale Order when an user choose to create an invoice, he can use the option : "Invoice the whole sales order + Automatic Deliver"
@@ -35,8 +35,6 @@ To use this module, you need to:
 Known issues / Roadmap
 ======================
 
-* ...
-
 Bug Tracker
 ===========
 
@@ -47,7 +45,8 @@ help us smashing it by providing a detailed and welcomed `feedback
 <https://github.com/OCA/
 sale-workflow/issues/new?body=module:%20
 sale_invoice_auto_deliver%0Aversion:%20
-8.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
+10.0%0A%0A**Steps%20to%20reproduce**%0A-%20..
+.%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
 
 Credits
 =======
@@ -61,6 +60,7 @@ Contributors
 ------------
 
 * Laetitia Gangloff <laetitia.gangloff@acsone.eu>
+* Cédric Pigeon <cedric.pigeon@acsone.eu>
 
 Maintainer
 ----------
