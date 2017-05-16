@@ -4,10 +4,10 @@
 
 
 from odoo.addons.sale_automatic_workflow.tests.common import \
-    TestAutomaticWorkflowBase as tawb
+    TestAutomaticWorkflowBase
 
 
-class TestAutomaticWorkflowPaymentMode(tawb):
+class TestAutomaticWorkflowPaymentMode(TestAutomaticWorkflowBase):
 
     def create_sale_order(self, workflow, override=None):
         new_order = super(TestAutomaticWorkflowPaymentMode, self).\
