@@ -5,7 +5,7 @@
 from odoo import api, models
 from odoo.tools import safe_eval
 from odoo.addons.sale_automatic_workflow.models.automatic_workflow_job import\
-    commit as workflow_commit
+    savepoint
 import logging
 _logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class AutomaticWorkflowJob(models.Model):
             domain = po_filter
             domain.append(('group_id', '=', sale.procurement_group_id.id))
             purchase_orders = self.env['purchase.order'].search(domain)
-            with workflow_commit(self.env.cr):
+            with savepoint(self.env.cr):
                 purchase_orders.button_confirm()
 
     @api.model
