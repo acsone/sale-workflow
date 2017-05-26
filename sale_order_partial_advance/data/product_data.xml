@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
-<openerp>
+<!-- Copyright 2016-2017 ACSONE SA/NV (<http://acsone.eu
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
     <data noupdate="0">
         <record id="sale.advance_product_0" model="product.product">
             <field name="list_price">0.0</field>
@@ -12,4 +14,4 @@
             <field name="sale_ok" eval="0"/>
         </record>
     </data>
-</openerp>
+</odoo>

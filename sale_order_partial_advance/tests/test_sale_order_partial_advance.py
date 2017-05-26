@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
-# © 2015 ACSONE SA/NV (<http://acsone.eu>)
-# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
-from openerp.tests import common as test_common
+# Copyright 2015-2017 ACSONE SA/NV (<http://acsone.eu>)
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+
+from odoo.tests.common import SavepointCase
 from uuid import uuid4
 
 
-class TestSaleOrderPartialAdvance(test_common.TransactionCase):
-
-    def setUp(self):
-        super(TestSaleOrderPartialAdvance, self).setUp()
-        self.so_obj = self.env['sale.order']
-        self.partner_id = self.env['res.partner'].create(
+class TestSaleOrderPartialAdvance(SavepointCase):
+    @classmethod
+    def setUpClass(cls):
+        super(TestSaleOrderPartialAdvance, cls).setUpClass()
+        cls.so_obj = cls.env['sale.order']
+        cls.partner_id = cls.env['res.partner'].create(
             {'name': '%s' % uuid4()})
-        product1 = self.ref('product.product_product_28')
-        product2 = self.ref('product.product_product_29')
-        self.order_lines = [
+        product1 = cls.ref('product.product_product_28')
+        product2 = cls.ref('product.product_product_29')
+        cls.order_lines = [
             (0, 0, {'product_id': product1,
                     'name': 'Test',
                     'product_uom_qty': 10.0,
@@ -26,9 +27,9 @@ class TestSaleOrderPartialAdvance(test_common.TransactionCase):
                     'price_unit': 120
                     })]
         # set taxes on advance product
-        self.product_advance = self.env.ref('sale.advance_product_0')
-        self.tax = self.env['account.tax'].create({'name': 'advance tax'})
-        self.product_advance.taxes_id = [(4, self.tax.id)]
+        cls.product_advance = cls.env.ref('sale.advance_product_0')
+        cls.tax = cls.env['account.tax'].create({'name': 'advance tax'})
+        cls.product_advance.taxes_id = [(4, cls.tax.id)]
 
     def test_sale_order_partial_advance(self):
         '''
