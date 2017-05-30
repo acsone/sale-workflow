@@ -7,7 +7,7 @@ import odoo.tests.common as common
 class TestSale(common.TransactionCase):
 
     def setUp(self):
-        common.TransactionCase.setUp(self)
+        super(TestSale, self).setUp()
 
         self.product_9 = self.env.ref("product.product_product_9")
         self.product_11 = self.env.ref("product.product_product_11")
@@ -19,8 +19,7 @@ class TestSale(common.TransactionCase):
         """
 
         so = self.env["sale.order"].create(
-            {"partner_id": self.env.ref("base.res_partner_2").id,
-             })
+            {"partner_id": self.env.ref("base.res_partner_2").id})
 
         wiz_obj = self.env['sale.import.products']
         wizard = wiz_obj.with_context(active_id=so.id,

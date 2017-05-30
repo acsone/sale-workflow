@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# © 2016 Cédric Pigeon, ACSONE SA/NV (<http://acsone.eu>)
+# Copyright 2016 Cédric Pigeon, ACSONE SA/NV (<http://acsone.eu>)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 {
     'name': "Sale Product Multi Add",
@@ -13,7 +13,8 @@
     'depends': [
         'sale',
     ],
-    'data': ['wizard/sale_import_products_view.xml',
-             'views/sale_view.xml',
-             ]
+    'data': [
+        'wizards/sale_import_products_view.xml',
+        'views/sale_view.xml',
+    ],
 }

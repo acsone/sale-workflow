@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# © 2016 Cédric Pigeon, ACSONE SA/NV (<http://acsone.eu>)
+# Copyright 2016 Cédric Pigeon, ACSONE SA/NV (<http://acsone.eu>)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from odoo import models, fields, api
@@ -10,8 +10,7 @@ class SaleImportProducts(models.TransientModel):
     _name = 'sale.import.products'
     _description = 'Sale Import Products'
 
-    products = fields.Many2many(comodel_name='product.product',
-                                string="Products")
+    products = fields.Many2many(comodel_name='product.product')
     items = fields.One2many(comodel_name='sale.import.products.items',
                             inverse_name='wizard_id')
 
@@ -31,7 +30,7 @@ class SaleImportProducts(models.TransientModel):
             'view_mode': 'form',
             'views': [(view.id, 'form')],
             'target': 'new',
-            'res_id': wizard.id,
+            'res_id': self.id,
             'context': self.env.context}
 
     @api.model
@@ -68,7 +67,6 @@ class SaleImportProductsItem(models.TransientModel):
     product_id = fields.Many2one(string='Product',
                                  comodel_name='product.product',
                                  required=True)
-    quantity = fields.Float(string='Quantity',
-                            digits=dp.get_precision('Product Unit of Measure'),
+    quantity = fields.Float(digits=dp.get_precision('Product Unit of Measure'),
                             default=1.0,
                             required=True)
