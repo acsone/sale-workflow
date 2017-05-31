@@ -36,7 +36,10 @@ class SaleAdvancePaymentInv(models.TransientModel):
                 if to_assign:
                     to_assign.action_assign()
                 if all([pick.state == 'assigned' for pick in pickings]):
-                    pickings.do_transfer()
+                    for pick in pickings:
+                        wiz = self.env['stock.immediate.transfer'].create(
+                            {'pick_id': pick.id})
+                        wiz.process()
                     picking_not_done = pickings.filtered(
                         lambda x: x.state != 'done')
                 else:

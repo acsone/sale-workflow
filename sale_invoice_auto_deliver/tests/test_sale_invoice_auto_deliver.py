@@ -57,3 +57,7 @@ class TestSaleInvoiceAutoDeliver(common.TransactionCase):
         with self.assertRaises(exceptions.Warning):
             adv_wizard.with_context(active_ids=[so.id]).create_invoices()
         self.assertEquals(so.picking_ids.state, 'confirmed')
+        for pick in so.picking_ids:
+            pack_ops = pick.pack_operation_pack_ids
+            self.assertTrue(all(pack_op.qty_done == pack_op.qty for pack_op
+                                in pack_ops))
