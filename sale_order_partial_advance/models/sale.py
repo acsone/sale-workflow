@@ -13,7 +13,7 @@ class SaleOrder(models.Model):
     def _compute_advance_amounts(self):
         advance_amount, advance_amount_used = 0, 0
         adv_product_id =\
-            self.env['sale.advance.payment.inv']._get_advance_product()
+            self.env['sale.advance.payment.inv']._default_product_id()
         for invoice in self.invoice_ids:
             if invoice.state == 'cancel' or invoice.cancelled_by_refund:
                 continue

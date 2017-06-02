@@ -8,7 +8,7 @@ from odoo import api, fields, models, _
 class SaleAdvancePaymentInv(models.TransientModel):
     _inherit = "sale.advance.payment.inv"
 
-    advance_amount_available = fields.Float('Advance Available')
+    advance_amount_available = fields.Float('Advance Available', readonly=True)
     advance_amount_to_use = fields.Float('Advance To Use',
                                          required=True,
                                          default=0.0)
@@ -30,8 +30,6 @@ class SaleAdvancePaymentInv(models.TransientModel):
                     all_lines = False
                 advance_amount_to_use += order.advance_amount_available
                 advance_amount_available += order.advance_amount_available
-        defaults['advance_amount_to_use'] = 0
-        defaults['advance_amount_available'] = 0
         return defaults
 
 """class SaleOrderLineMakeInvoice(models.TransientModel):

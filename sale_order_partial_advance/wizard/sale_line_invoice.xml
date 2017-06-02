@@ -34,8 +34,7 @@
                     <group>
                         <label for="advance_amount_available" attrs="{'invisible': [('advance_payment_method', 'in', ('fixed','percentage'))]}"/>
                         <div attrs="{'invisible': [('advance_payment_method', 'in', ('fixed','percentage'))]}">
-                            <field name="advance_amount_available"
-                                attrs="{'required': [('advance_payment_method', 'not in', ('fixed','percentage'))]}" class="oe_inline" widget="monetary"/>
+                            <field name="advance_amount_available" class="oe_inline" widget="monetary"/>
                         </div>
                         <label for="advance_amount_to_use" attrs="{'invisible': [('advance_payment_method', 'in', ('fixed','percentage'))]}"/>
                         <div attrs="{'invisible': [('advance_payment_method', 'in', ('fixed','percentage'))]}">
