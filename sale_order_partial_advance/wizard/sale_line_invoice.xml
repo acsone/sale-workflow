@@ -3,7 +3,7 @@
      License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
 <odoo>
     <data>
-        <record id="view_sale_order_line_make_invoice" model="ir.ui.view">
+        <!--<record id="view_sale_order_line_make_invoice" model="ir.ui.view">
             <field name="name">Sales OrderLine Make Invoice</field>
             <field name="model">sale.order.line.make.invoice</field>
             <field name="inherit_id" ref='sale.view_sale_order_line_make_invoice'/>
@@ -20,6 +20,31 @@
                         </field>
                     </group>
                 </xpath>
+            </field>
+        </record>-->
+
+        <record id="view_sale_order_advance_payment_inv_partial" model="ir.ui.view">
+            <field name="name">Invoice Orders (sale order partial advance)</field>
+            <field name="model">sale.advance.payment.inv</field>
+            <field name="inherit_id" ref="sale.view_sale_advance_payment_inv"/>
+            <field name="arch" type="xml">
+
+                <!-- to consum -->
+                <xpath expr="//field[@name='deposit_taxes_id']/.." position="after">
+                    <group>
+                        <label for="advance_amount_available" attrs="{'invisible': [('advance_payment_method', 'in', ('fixed','percentage'))]}"/>
+                        <div attrs="{'invisible': [('advance_payment_method', 'in', ('fixed','percentage'))]}">
+                            <field name="advance_amount_available"
+                                attrs="{'required': [('advance_payment_method', 'not in', ('fixed','percentage'))]}" class="oe_inline" widget="monetary"/>
+                        </div>
+                        <label for="advance_amount_to_use" attrs="{'invisible': [('advance_payment_method', 'in', ('fixed','percentage'))]}"/>
+                        <div attrs="{'invisible': [('advance_payment_method', 'in', ('fixed','percentage'))]}">
+                            <field name="advance_amount_to_use"
+                                attrs="{'required': [('advance_payment_method', 'not in', ('fixed','percentage'))]}" class="oe_inline" widget="monetary"/>
+                        </div>
+                    </group>
+                </xpath>
+
             </field>
         </record>
     </data>

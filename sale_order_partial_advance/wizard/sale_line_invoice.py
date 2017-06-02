@@ -1,11 +1,40 @@
 # -*- coding: utf-8 -*-
 # © 2015 ACSONE SA/NV (<http://acsone.eu>)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
-from openerp import api, fields, models
-from openerp.tools.translate import _
+
+from odoo import api, fields, models, _
 
 
-class SaleOrderLineMakeInvoice(models.TransientModel):
+class SaleAdvancePaymentInv(models.TransientModel):
+    _inherit = "sale.advance.payment.inv"
+
+    advance_amount_available = fields.Float('Advance Available')
+    advance_amount_to_use = fields.Float('Advance To Use',
+                                         required=True,
+                                         default=0.0)
+
+    @api.model
+    def default_get(self, fields):
+        defaults = super(SaleAdvancePaymentInv, self).default_get(fields)
+        lines = self.env['sale.order.line'].browse(
+            self.env.context.get('active_ids', []))
+        orders = set([line.order_id for line in lines
+                      if line.order_id.advance_amount_available > 0])
+        if orders:
+            advance_amount_to_use = advance_amount_available = 0.0
+            for order in orders:
+                all_lines = True
+                res = [line.id for line in order.order_line
+                       if line not in lines and not line.invoiced]
+                if res:
+                    all_lines = False
+                advance_amount_to_use += order.advance_amount_available
+                advance_amount_available += order.advance_amount_available
+        defaults['advance_amount_to_use'] = 0
+        defaults['advance_amount_available'] = 0
+        return defaults
+
+"""class SaleOrderLineMakeInvoice(models.TransientModel):
     _inherit = 'sale.order.line.make.invoice'
 
     order_ids = fields.One2many(string='Sale Orders',
@@ -101,4 +130,4 @@ class SaleOrderMakeInvoice(models.TransientModel):
     advance_amount_to_use = fields.Float('Advance To Use',
                                          required=True,
                                          default=0.0)
-    all_lines = fields.Boolean('All Sale Order Lines Selected')
+    all_lines = fields.Boolean('All Sale Order Lines Selected')"""
