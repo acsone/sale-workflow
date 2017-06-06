@@ -11,40 +11,51 @@ class SaleOrder(models.Model):
     @api.one
     @api.depends('invoice_ids')
     def _compute_advance_amounts(self):
-        advance_amount, advance_amount_used = 0, 0
+        advance_amount = 0
+        advance_amount_used = 0
         adv_product_id =\
             self.env['sale.advance.payment.inv']._default_product_id()
         for invoice in self.invoice_ids:
             if invoice.state == 'cancel' or invoice.cancelled_by_refund:
                 continue
             advance_amount += sum([line.price_unit
-                                  for line in invoice.invoice_line
-                                  if (line.product_id.id == adv_product_id and
+                                  for line in invoice.invoice_line_ids
+                                  if (line.product_id == adv_product_id and
                                       line.price_unit > 0)])
             advance_amount_used -= sum([line.price_unit
-                                        for line in invoice.invoice_line
-                                        if (line.product_id.id ==
+                                        for line in invoice.invoice_line_ids
+                                        if (line.product_id ==
                                             adv_product_id and
                                             line.price_unit < 0)])
         self.advance_amount_available = advance_amount - advance_amount_used
         self.advance_amount = advance_amount
         self.advance_amount_used = advance_amount_used
 
-    @api.model
-    def _prepare_invoice(self, order, lines):
+    @api.multi
+    def action_invoice_create(self, grouped=False, final=False):
+        res_id = super(SaleOrder, self).action_invoice_create(grouped, final)
+        # see how to update invoice line
+        invoice_obj = self.env['account.invoice'].browse(res_id)
+        for line in invoice_obj.invoice_line_ids:
+            if self.env.context.get('advance_amount_to_use'):
+                line.write({'price_unit': - self.env.context.get('advance_amount_to_use')})
+        return res_id
+
+    """@api.model
+    def _prepare_invoice(self):
         adv_product_id =\
-            self.env['sale.advance.payment.inv']._get_advance_product()
+            self.env['sale.advance.payment.inv']._default_product_id()
         adv_line_count = 0
-        for invoice_line in self.env['account.invoice.line'].browse(lines):
-            if invoice_line.product_id.id == adv_product_id:
-                if adv_line_count == 0 and order.advance_amount_available > 0:
+        for invoice_line in self.invoice_ids.invoice_line_ids:
+            if invoice_line.product_id == adv_product_id:
+                if adv_line_count == 0 and self.advance_amount_available > 0:
                     invoice_line.write(
-                        {'price_unit': - order.advance_amount_available})
+                        {'price_unit': - self.advance_amount_available})
                     adv_line_count += 1
                 else:
-                    lines.remove(invoice_line.id)
+                    self.remove(invoice_line.id)
                     invoice_line.unlink()
-        return super(SaleOrder, self)._prepare_invoice(order, lines)
+        return super(SaleOrder, self)._prepare_invoice()"""
 
     advance_amount = fields.Float('Advance Amount',
                                   compute='_compute_advance_amounts')

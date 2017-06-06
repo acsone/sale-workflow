@@ -16,14 +16,26 @@ class SaleAdvancePaymentInv(models.TransientModel):
     @api.model
     def default_get(self, fields):
         defaults = super(SaleAdvancePaymentInv, self).default_get(fields)
-        orders = self.env['sale.order'].browse(
+        advance_amount_available = 0.0
+        order = self.env['sale.order'].browse(
             self.env.context.get('active_ids', []))
-        if orders:
-            advance_amount_to_use = advance_amount_available = 0.0
-            for order in orders:
-                advance_amount_to_use += order.advance_amount_available
-                advance_amount_available += order.advance_amount_available
+        if order:
+            advance_amount_available += order.advance_amount_available
+        defaults['advance_amount_available'] = advance_amount_available
         return defaults
+
+    @api.multi
+    def _create_invoice(self, order, so_line, amount):
+        invoice = super(SaleAdvancePaymentInv, self)._create_invoice(order, so_line, amount)
+        return invoice
+
+    @api.multi
+    def create_invoices(self):
+        if self.advance_payment_method == 'delivered':
+            ctx = self.env.context.copy()
+            ctx['advance_amount_to_use'] = self.advance_amount_to_use
+            return super(SaleAdvancePaymentInv, self.with_context(ctx)).create_invoices()
+        return super(SaleAdvancePaymentInv, self).create_invoices()
 
 """class SaleOrderLineMakeInvoice(models.TransientModel):
     _inherit = 'sale.order.line.make.invoice'
