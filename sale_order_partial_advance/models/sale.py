@@ -34,28 +34,15 @@ class SaleOrder(models.Model):
     @api.multi
     def action_invoice_create(self, grouped=False, final=False):
         res_id = super(SaleOrder, self).action_invoice_create(grouped, final)
-        # see how to update invoice line
-        invoice_obj = self.env['account.invoice'].browse(res_id)
-        for line in invoice_obj.invoice_line_ids:
-            if self.env.context.get('advance_amount_to_use'):
-                line.write({'price_unit': - self.env.context.get('advance_amount_to_use')})
+        if not all([line.invoice_status == 'invoiced' for line in self.order_line]):
+            # see how to update invoice line
+            invoice_obj = self.env['account.invoice'].browse(res_id)
+            adv_product_id = \
+                self.env['sale.advance.payment.inv']._default_product_id()
+            for line in invoice_obj.invoice_line_ids.filtered(lambda x : x.product_id == adv_product_id):
+                if self.env.context.get('advance_amount_to_use'):
+                    line.write({'price_unit': - self.env.context.get('advance_amount_to_use')})
         return res_id
-
-    """@api.model
-    def _prepare_invoice(self):
-        adv_product_id =\
-            self.env['sale.advance.payment.inv']._default_product_id()
-        adv_line_count = 0
-        for invoice_line in self.invoice_ids.invoice_line_ids:
-            if invoice_line.product_id == adv_product_id:
-                if adv_line_count == 0 and self.advance_amount_available > 0:
-                    invoice_line.write(
-                        {'price_unit': - self.advance_amount_available})
-                    adv_line_count += 1
-                else:
-                    self.remove(invoice_line.id)
-                    invoice_line.unlink()
-        return super(SaleOrder, self)._prepare_invoice()"""
 
     advance_amount = fields.Float('Advance Amount',
                                   compute='_compute_advance_amounts')

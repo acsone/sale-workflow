@@ -12,14 +12,14 @@
                 <!-- to consum -->
                 <xpath expr="//field[@name='deposit_taxes_id']/.." position="after">
                     <group>
-                        <label for="advance_amount_available" attrs="{'invisible': [('advance_payment_method', 'in', ('fixed','percentage','all'))]}"/>
-                        <div attrs="{'invisible': [('advance_payment_method', 'in', ('fixed','percentage','all'))]}">
+                        <label for="advance_amount_available" attrs="{'invisible': [('advance_payment_method', 'in', ('fixed','percentage','delivered'))]}"/>
+                        <div attrs="{'invisible': [('advance_payment_method', 'in', ('fixed','percentage','delivered'))]}">
                             <field name="advance_amount_available" class="oe_inline" widget="monetary"/>
                         </div>
-                        <label for="advance_amount_to_use" attrs="{'invisible': [('advance_payment_method', 'in', ('fixed','percentage','all'))]}"/>
-                        <div attrs="{'invisible': [('advance_payment_method', 'in', ('fixed','percentage','all'))]}">
+                        <label for="advance_amount_to_use" attrs="{'invisible': [('advance_payment_method', 'in', ('fixed','percentage','delivered'))]}"/>
+                        <div attrs="{'invisible': [('advance_payment_method', 'in', ('fixed','percentage','delivered'))]}">
                             <field name="advance_amount_to_use"
-                                attrs="{'required': [('advance_payment_method', 'not in', ('fixed','percentage','all'))]}" class="oe_inline" widget="monetary"/>
+                                attrs="{'required': [('advance_payment_method', 'not in', ('fixed','percentage','delivered'))]}" class="oe_inline" widget="monetary"/>
                         </div>
                     </group>
                 </xpath>
