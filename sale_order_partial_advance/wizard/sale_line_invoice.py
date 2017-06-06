@@ -16,9 +16,9 @@ class SaleAdvancePaymentInv(models.TransientModel):
     @api.model
     def default_get(self, fields):
         defaults = super(SaleAdvancePaymentInv, self).default_get(fields)
-        lines = self.env['sale.order.line'].browse(
+        order = self.env['sale.order'].browse(
             self.env.context.get('active_ids', []))
-        orders = set([line.order_id for line in lines
+        orders = set([line.order_id for line in order
                       if line.order_id.advance_amount_available > 0])
         if orders:
             advance_amount_to_use = advance_amount_available = 0.0
