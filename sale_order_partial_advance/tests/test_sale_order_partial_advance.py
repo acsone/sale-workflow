@@ -16,6 +16,7 @@ class TestSaleOrderPartialAdvance(SavepointCase):
         cls.so_obj = cls.env['sale.order']
         cls.product_obj = cls.env['product.product']
         cls.account_tax_obj = cls.env['account.tax']
+        cls.deposit_product_obj = cls.env['sale.advance.payment.inv']
 
         # INSTANCES
         cls.partner_id = cls.env['res.partner'].create(
@@ -23,34 +24,38 @@ class TestSaleOrderPartialAdvance(SavepointCase):
         cls.product1 = cls.product_obj.create({
             'name': 'External Hard disk',
             'type':'consu',
+            'invoice_policy': 'order',
         })
         cls.product2 = cls.product_obj.create({
             'name': 'Pen drive, SP-2',
-            'type': 'consu'
+            'type': 'consu',
+            'invoice_policy': 'order',
         })
-        cls.account_tax = cls.account_tax_obj.create({
-            'name': 'Percent tax',
-            'type': 'percent',
-            'amount': '0.1',
-        })
+        cls.account_tax = cls.account_tax_obj.create(dict(name="Include tax",
+                                                      amount='21.00',
+                                                      price_include=True))
 
         # product1 = cls.env.ref('product.product_product_28')
         # product2 = cls.env.ref('product.product_product_29')
         cls.order_lines = [
             (0, 0, {'product_id': cls.product1.id,
-                    'name': 'Test',
                     'product_uom_qty': 10.0,
                     'price_unit': 100
                     }),
             (0, 0, {'product_id': cls.product2.id,
-                    'name': 'Test2',
                     'product_uom_qty': 5.0,
                     'price_unit': 120
                     })]
+
+        # set default product
+        vals = cls.deposit_product_obj._prepare_deposit_product()
+        product_id = cls.product_obj.create(vals)
+        cls.env['ir.values'].sudo().set_default('sale.config.settings',
+                                                 'deposit_product_id_setting',
+                                                 product_id.id)
         # set taxes on advance product
-        cls.product_advance = cls.env.ref('sale.advance_product_0')
-        # cls.tax = cls.env['account.tax'].create({'name': 'advance tax'})
-        cls.product_advance.taxes_id = [(4, cls.account_tax.id)]
+        cls.product_advance = cls.deposit_product_obj._default_product_id()
+        cls.product_advance.write({'taxes_id': [(6, 0, [cls.account_tax.id])]})
 
     def test_sale_order_partial_advance(self):
         '''
@@ -73,10 +78,14 @@ class TestSaleOrderPartialAdvance(SavepointCase):
         self.assertEqual(order.amount_total, 1840.0)
         order.action_confirm()
 
+        context = {"active_model": 'sale.order', "active_ids": [order.id],
+                   "active_id": order.id}
+
         # ----------------------------------------------
         #    Invoice a deposit of 500.0
+        #    This create one draft invoice
         # ----------------------------------------------
-        adv_wizard = self.env['sale.advance.payment.inv'].create(
+        adv_wizard = self.env['sale.advance.payment.inv'].with_context(context).create(
             {'advance_payment_method': 'fixed',
              'amount': 500.0,
              })
@@ -85,155 +94,37 @@ class TestSaleOrderPartialAdvance(SavepointCase):
         self.assertEqual(order.advance_amount, 500.0)
         self.assertEqual(order.advance_amount_available, 500.0)
         self.assertEqual(order.advance_amount_used, 0.0)
+        invoice = order.invoice_ids.filtered(lambda r: r.state == 'draft')
+        self.assertEqual(len(invoice), 1)
+        self.assertEqual(invoice.amount_total, 500.0)
+        self.assertEqual(self.product_advance, invoice.invoice_line_ids.product_id)
 
         # ---------------------------------------------------------------------
-        #    Invoice the first sale order line and consume 200.0 from
-        #    the deposit
+        #    Invoice only one sale order line (with invoice_policy = delivery)
+        #    and consume 200.0 from the deposit
+        #    result : second draft invoice with 3 lines
         # ---------------------------------------------------------------------
-        wizard = self.env['sale.order.line.make.invoice'].with_context(
-            active_ids=[order.order_line[0].id]).create({})
-        wizard.order_ids[0].advance_amount_to_use = 200.0
-        res = wizard.with_context(open_invoices=True).make_invoices()
-        invoice = self.env['account.invoice'].browse(res['res_id'])
-        self.assertEqual(len(invoice.invoice_line), 2)
+        wizard = self.env['sale.advance.payment.inv'].with_context(context).create({
+            'advance_payment_method': 'all',
+        })
+        self.assertEqual(wizard.advance_amount_available, 500.0)
+        wizard.advance_amount_to_use = 200.0
+        wizard.with_context(context).create_invoices()
+        invoices = order.invoice_ids.filtered(lambda r: r.state == 'draft')
+        self.assertEqual(len(invoices), 2)
         inv_adv_line = self.env['account.invoice.line']
-        for line in invoice.invoice_line:
-            if line.product_id.id == self.product_advance.id:
-                inv_adv_line = line
-                break
-        self.assertEqual(inv_adv_line.invoice_line_tax_id.id,
-                         self.tax.id)
-        self.assertEqual(invoice.amount_total, 800.0)
-        self.assertEqual(order.advance_amount, 500.0)
-        self.assertEqual(order.advance_amount_available, 300.0)
-        self.assertEqual(order.advance_amount_used, 200.0)
+        for invoice in invoices:
+            for line in invoice.invoice_line_ids:
+                if line.product_id == self.product_advance:
+                    inv_adv_line = line
+                    break
 
-        # ----------------------------------------------
-        #    Invoice the remaining balance
-        # ----------------------------------------------
-        adv_wizar = self.env['sale.advance.payment.inv'].create(
-            {'advance_payment_method': 'all',
-             })
-        res = adv_wizar.with_context(active_ids=[order.id],
-                                     open_invoices=True).create_invoices()
-        invoice = self.env['account.invoice'].browse(res['res_id'])
-        self.assertEqual(invoice.amount_total, 300.0)
-        self.assertEqual(order.advance_amount, 500.0)
-        self.assertEqual(order.advance_amount_available, 0.0)
-        self.assertEqual(order.advance_amount_used, 500.0)
+        self.assertEqual(self.account_tax.id,inv_adv_line.invoice_line_tax_ids.id)
+        wizard = self.env['sale.advance.payment.inv'].with_context(
+            context).create({})
 
-    def test_sale_order_partial_advance_all_lines(self):
-        '''
-            Test scenario
-            - Create a sale order with 2 lines
-            - Confirm the sale order
-            - Invoice an advance
-            - Invoice the 2 order lines at the same time, the whole advance
-              amount should be used
-        '''
-        # ----------------------------------------------
-        # Create and confirm a sale order with 2 lines
-        # ----------------------------------------------
-        vals = {
-            'partner_id': self.partner_id.id,
-            'order_line': self.order_lines,
-        }
-        order = self.so_obj.create(vals)
-        self.assertEqual(order.amount_total, 1840.0)
-        order.action_confirm()
-
-        # ----------------------------------------------
-        #    Invoice a deposit of 500.0
-        # ----------------------------------------------
-        adv_wizard = self.env['sale.advance.payment.inv'].create(
-            {'advance_payment_method': 'fixed',
-             'amount': 500.0,
-             })
-        adv_wizard.with_context(active_ids=[order.id]).create_invoices()
-        self.assertTrue(order.invoice_ids)
-        self.assertEqual(order.advance_amount, 500.0)
-        self.assertEqual(order.advance_amount_available, 500.0)
-        self.assertEqual(order.advance_amount_used, 0.0)
-
-        # ----------------------------------------------------------
-        #    Invoice the 2 sale order line, the whole advance amount
-        #    should be consumed
-        # ----------------------------------------------
-        wizard = self.env['sale.order.line.make.invoice'].with_context(
-            active_ids=order.order_line.ids).create({})
-        res = wizard.with_context(open_invoices=True).make_invoices()
-        invoice = self.env['account.invoice'].browse(res['res_id'])
-        self.assertEqual(invoice.amount_total, 1100.0)
-        self.assertEqual(order.advance_amount, 500.0)
-        self.assertEqual(order.advance_amount_available, 0.0)
-        self.assertEqual(order.advance_amount_used, 500.0)
-
-    def test_sale_order_partial_advance_refund(self):
-        '''
-            Test scenario
-            - Create a sale order with 2 lines
-            - Confirm the sale order
-            - Invoice an advance
-            - Make a refund for the advance
-            - Invoice a new advance
-            - Invoice the 2 order lines at the same time, the first advance
-              amount should be ignored
-        '''
-        # ----------------------------------------------
-        # Create and confirm a sale order with 2 lines
-        # ----------------------------------------------
-        vals = {
-            'partner_id': self.partner_id.id,
-            'order_line': self.order_lines,
-        }
-        order = self.so_obj.create(vals)
-        self.assertEqual(order.amount_total, 1840.0)
-        order.action_confirm()
-
-        # ----------------------------------------------
-        #    Invoice a deposit of 500.0
-        # ----------------------------------------------
-        adv_wizard = self.env['sale.advance.payment.inv'].create(
-            {'advance_payment_method': 'fixed',
-             'amount': 500.0,
-             })
-        adv_wizard.with_context(active_ids=[order.id]).create_invoices()
-        self.assertTrue(order.invoice_ids)
-        self.assertEqual(order.advance_amount, 500.0)
-        self.assertEqual(order.advance_amount_available, 500.0)
-        self.assertEqual(order.advance_amount_used, 0.0)
-        # ----------------------------------------------
-        #    Refund the deposit of 500.0
-        # ----------------------------------------------
-        invoice = order.invoice_ids[0]
-        invoice.signal_workflow('invoice_open')
-        refund_wizard = self.env['account.invoice.refund'].with_context(
-            active_ids=[invoice.id]).create({'filter_refund': 'cancel'})
-        refund_wizard.invoice_refund()
-        self.assertEqual(invoice.state, 'paid')
-
-        # ----------------------------------------------
-        #    Invoice a deposit of 300.0
-        # ----------------------------------------------
-        adv_wizard = self.env['sale.advance.payment.inv'].create(
-            {'advance_payment_method': 'fixed',
-             'amount': 300.0,
-             })
-        adv_wizard.with_context(active_ids=[order.id]).create_invoices()
-        self.assertTrue(order.invoice_ids)
-        self.assertEqual(order.advance_amount, 300.0)
-        self.assertEqual(order.advance_amount_available, 300.0)
-        self.assertEqual(order.advance_amount_used, 0.0)
-
-        # ----------------------------------------------------------
-        #    Invoice the 2 sale order line, the whole advance amount
-        #    should be consumed
-        # ----------------------------------------------
-        wizard = self.env['sale.order.line.make.invoice'].with_context(
-            active_ids=order.order_line.ids).create({})
-        res = wizard.with_context(open_invoices=True).make_invoices()
-        invoice = self.env['account.invoice'].browse(res['res_id'])
-        self.assertEqual(invoice.amount_total, 1300.0)
-        self.assertEqual(order.advance_amount, 300.0)
-        self.assertEqual(order.advance_amount_available, 0.0)
-        self.assertEqual(order.advance_amount_used, 300.0)
+        print '---val---',invoices[0].amount_total
+        print '---val---', invoices[1].amount_total
+        print '---val---', order.advance_amount
+        print '---val---',order.advance_amount_available
+        print '---val---',order.advance_amount_used

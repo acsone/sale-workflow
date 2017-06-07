@@ -14,7 +14,7 @@
         'sale',
     ],
     'data': [
-        'data/product_data.xml',
+        # 'data/product_data.xml',
         'wizard/sale_line_invoice.xml',
     ],
     'installable': True,

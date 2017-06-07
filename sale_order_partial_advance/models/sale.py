@@ -35,7 +35,6 @@ class SaleOrder(models.Model):
     def action_invoice_create(self, grouped=False, final=False):
         res_id = super(SaleOrder, self).action_invoice_create(grouped, final)
         if not all([line.invoice_status == 'invoiced' for line in self.order_line]):
-            # see how to update invoice line
             invoice_obj = self.env['account.invoice'].browse(res_id)
             adv_product_id = \
                 self.env['sale.advance.payment.inv']._default_product_id()
