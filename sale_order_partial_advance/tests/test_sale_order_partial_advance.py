@@ -75,11 +75,12 @@ class TestSaleOrderPartialAdvance(SavepointCase):
             'order_line': self.order_lines,
         }
         order = self.so_obj.create(vals)
+        self.assertEqual(order.amount_untaxed, 1600.0)
         self.assertEqual(order.amount_total, 1840.0)
         order.action_confirm()
 
         context = {"active_model": 'sale.order', "active_ids": [order.id],
-                   "active_id": order.id}
+                   "active_id": order.id, "open_invoices": True}
 
         # ----------------------------------------------
         #    Invoice a deposit of 500.0
@@ -109,22 +110,25 @@ class TestSaleOrderPartialAdvance(SavepointCase):
         })
         self.assertEqual(wizard.advance_amount_available, 500.0)
         wizard.advance_amount_to_use = 200.0
-        wizard.with_context(context).create_invoices()
-        invoices = order.invoice_ids.filtered(lambda r: r.state == 'draft')
-        self.assertEqual(len(invoices), 2)
+        res = wizard.with_context(context).create_invoices()
+
+        invoice = self.env['account.invoice'].search(res['domain']).sorted(
+            key=lambda r: r.id, reverse=True)[0]
+        self.assertEqual(len(invoice.invoice_line_ids), 3)
         inv_adv_line = self.env['account.invoice.line']
-        for invoice in invoices:
-            for line in invoice.invoice_line_ids:
-                if line.product_id == self.product_advance:
-                    inv_adv_line = line
-                    break
+        for line in invoice.invoice_line_ids:
+            if line.product_id == self.product_advance:
+                inv_adv_line = line
+                break
 
         self.assertEqual(self.account_tax.id,inv_adv_line.invoice_line_tax_ids.id)
+        self.assertEqual(invoice.amount_untaxed, 800.0)
+        self.assertEqual(invoice.amount_total, 1340.0)
+        self.assertEqual(order.advance_amount, 500.0)
         wizard = self.env['sale.advance.payment.inv'].with_context(
             context).create({})
 
-        print '---val---',invoices[0].amount_total
-        print '---val---', invoices[1].amount_total
+        print '---val---',invoice.amount_total
         print '---val---', order.advance_amount
         print '---val---',order.advance_amount_available
         print '---val---',order.advance_amount_used
