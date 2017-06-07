@@ -7,29 +7,50 @@ from uuid import uuid4
 
 
 class TestSaleOrderPartialAdvance(SavepointCase):
+
     @classmethod
     def setUpClass(cls):
         super(TestSaleOrderPartialAdvance, cls).setUpClass()
+
+        # MODELS
         cls.so_obj = cls.env['sale.order']
+        cls.product_obj = cls.env['product.product']
+        cls.account_tax_obj = cls.env['account.tax']
+
+        # INSTANCES
         cls.partner_id = cls.env['res.partner'].create(
             {'name': '%s' % uuid4()})
-        product1 = cls.ref('product.product_product_28')
-        product2 = cls.ref('product.product_product_29')
+        cls.product1 = cls.product_obj.create({
+            'name': 'External Hard disk',
+            'type':'consu',
+        })
+        cls.product2 = cls.product_obj.create({
+            'name': 'Pen drive, SP-2',
+            'type': 'consu'
+        })
+        cls.account_tax = cls.account_tax_obj.create({
+            'name': 'Percent tax',
+            'type': 'percent',
+            'amount': '0.1',
+        })
+
+        # product1 = cls.env.ref('product.product_product_28')
+        # product2 = cls.env.ref('product.product_product_29')
         cls.order_lines = [
-            (0, 0, {'product_id': product1,
+            (0, 0, {'product_id': cls.product1.id,
                     'name': 'Test',
                     'product_uom_qty': 10.0,
                     'price_unit': 100
                     }),
-            (0, 0, {'product_id': product2,
-                    'name': 'Test',
+            (0, 0, {'product_id': cls.product2.id,
+                    'name': 'Test2',
                     'product_uom_qty': 5.0,
                     'price_unit': 120
                     })]
         # set taxes on advance product
         cls.product_advance = cls.env.ref('sale.advance_product_0')
-        cls.tax = cls.env['account.tax'].create({'name': 'advance tax'})
-        cls.product_advance.taxes_id = [(4, cls.tax.id)]
+        # cls.tax = cls.env['account.tax'].create({'name': 'advance tax'})
+        cls.product_advance.taxes_id = [(4, cls.account_tax.id)]
 
     def test_sale_order_partial_advance(self):
         '''
@@ -49,8 +70,8 @@ class TestSaleOrderPartialAdvance(SavepointCase):
             'order_line': self.order_lines,
         }
         order = self.so_obj.create(vals)
-        self.assertEqual(order.amount_total, 1600.0)
-        order.action_button_confirm()
+        self.assertEqual(order.amount_total, 1840.0)
+        order.action_confirm()
 
         # ----------------------------------------------
         #    Invoice a deposit of 500.0
@@ -118,8 +139,8 @@ class TestSaleOrderPartialAdvance(SavepointCase):
             'order_line': self.order_lines,
         }
         order = self.so_obj.create(vals)
-        self.assertEqual(order.amount_total, 1600.0)
-        order.action_button_confirm()
+        self.assertEqual(order.amount_total, 1840.0)
+        order.action_confirm()
 
         # ----------------------------------------------
         #    Invoice a deposit of 500.0
@@ -166,8 +187,8 @@ class TestSaleOrderPartialAdvance(SavepointCase):
             'order_line': self.order_lines,
         }
         order = self.so_obj.create(vals)
-        self.assertEqual(order.amount_total, 1600.0)
-        order.action_button_confirm()
+        self.assertEqual(order.amount_total, 1840.0)
+        order.action_confirm()
 
         # ----------------------------------------------
         #    Invoice a deposit of 500.0
