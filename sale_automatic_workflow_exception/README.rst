@@ -6,10 +6,11 @@
 Sale Automatic workflow exception
 =================================
 
-Auto installable Module for the compatibility
+* Auto installable Module for the compatibility
 with the Sale Automatic Workflow and Sale Exception.
-Order in exception are ignored by the cron to avoid useless testing
-every minutes. Please take care to active the cron "Test Draft Orders"
+* Order in exception are ignored by the cron to avoid useless testing
+every minutes.
+* Please take care to active the cron "Test Draft Orders"
 in order to retest some time the order with an exception.
 
 Installation
@@ -23,8 +24,8 @@ Configuration
 
 Activate the cron "Test Draft Orders":
 
-* Go to Setting > Technical > Automation > Scheduled Actions
-* Activate the cron "Test Draft Orders"
+#. Go to Setting > Technical > Automation > Scheduled Actions
+#. Activate the cron "Test Draft Orders"
 
 
 Usage
