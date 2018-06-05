@@ -28,7 +28,7 @@ class SaleOrderLine(models.Model):
         :return:
         """
         for line in self.filtered(
-                lambda l: any(not picking.can_be_amended
+                lambda l: any(picking.state not in ('cancel') and not picking.can_be_amended
                               for picking in l.order_id.picking_ids)):
             line.pickings_in_progress = True
 
