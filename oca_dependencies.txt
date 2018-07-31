@@ -5,4 +5,5 @@ account-closing
 server-tools
 manufacture
 account-invoicing
+web
 product-attribute
