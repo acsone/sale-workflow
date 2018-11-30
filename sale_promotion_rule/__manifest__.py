@@ -9,7 +9,7 @@
     "development_status": "Beta",
     "category": "Sale",
     "website": "https://akretion.com",
-    'author': 'Anybox, ACSONE SA/NV,Odoo Community Association (OCA)',
+    'author': 'Akretion, ACSONE SA/NV, Odoo Community Association (OCA)',
     "license": "AGPL-3",
     "application": False,
     "installable": True,
