@@ -14,5 +14,5 @@ Coupon are special manual rules. Only one coupon can be applied to a
 sale order. This rule takes always precedence over automatic rules.
 
 
-.. image:: https://raw.githubusercontent.com/OCA/sale-workflow/10.0/sale_promotion_rule/static/description/promotion_rule.png
+.. image:: ../sale_promotion_rule/static/description/promotion_rule.png
    :alt: Promotion rules screenshot
