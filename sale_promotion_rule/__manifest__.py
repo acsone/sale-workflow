@@ -8,15 +8,11 @@
     "version": "10.0.1.0.0",
     "development_status": "Beta",
     "category": "Sale",
-    "website": "https://akretion.com",
+    "website": "https://github.com/OCA/sale-workflow",
     'author': 'Akretion, ACSONE SA/NV, Odoo Community Association (OCA)',
     "license": "AGPL-3",
     "application": False,
     "installable": True,
-    "external_dependencies": {
-        "python": [],
-        "bin": [],
-    },
     "depends": [
         "sale",
     ],
@@ -29,6 +25,4 @@
     "demo": [
         'demo/sale_promotion_rule.xml',
     ],
-    "qweb": [
-    ]
 }
