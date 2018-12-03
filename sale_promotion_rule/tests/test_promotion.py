@@ -63,7 +63,11 @@ class AbstractCommonPromotionCase(object):
         self.assertEqual(line.discount, promo_rule.discount_amount)
 
 
-class AbstractPromotionCase(AbstractCommonPromotionCase):
+class PromotionCase(TransactionCase, AbstractCommonPromotionCase):
+
+    def setUp(self, *args, **kwargs):
+        super(PromotionCase, self).setUp(*args, **kwargs)
+        self.set_up('sale.sale_order_3')
 
     def test_add_valid_discount_code_for_all_line(self):
         self.add_coupon_code('ELDONGHUT')
@@ -104,10 +108,3 @@ class AbstractPromotionCase(AbstractCommonPromotionCase):
         self.assertEqual(first_line.discount, 20)
         for line in self.sale.order_line:
             self.check_discount_rule_set(line, self.promotion_rule_coupon)
-
-
-class PromotionCase(TransactionCase, AbstractPromotionCase):
-
-    def setUp(self, *args, **kwargs):
-        super(PromotionCase, self).setUp(*args, **kwargs)
-        self.set_up('sale.sale_order_3')
