@@ -42,7 +42,8 @@ class SalePromotionRule(models.Model):
     discount_type = fields.Selection(
         selection=[
             ('percentage', 'Percentage'),
-            # ('amount', 'Amount'), TODO implement
+            ('amount_tax_included', 'Amount (Taxes included)'),
+            ('amount_tax_excluded', 'Amount (Taxes excluded)'),
             ],
         required=True,
         default='percentage')
@@ -284,15 +285,53 @@ according to the strategy
                 _('Not supported promotion type %s') % self.promo_type
             )
 
+    def _compute_percent_amount_tax_exc(self, order, lines):
+        percent_discount = (
+            100.0 - (
+                (order.amount_untaxed - self.discount_amount)
+                / order.amount_untaxed
+                * 100.0
+            )
+        )
+        return dict.fromkeys(lines, percent_discount)
+
+    def _compute_percent_amount_tax_inc(self, order, lines):
+        average_discount = (
+            100.0 - (
+                (order.amount_total - self.discount_amount)
+                / order.amount_total
+                * 100.0
+            )
+        )
+        return dict.fromkeys(lines, average_discount)
+
+    def _compute_percent_discount_by_lines(self, order, lines):
+        self.ensure_one()
+        if not order == lines.mapped('order_id'):
+            raise Exception("All lines must come from the same order")
+
+        if self.discount_type == "amount_tax_excluded":
+            percent_by_line = self._compute_percent_amount_tax_exc(
+                order, lines
+            )
+        elif self.discount_type == "amount_tax_included":
+            percent_by_line = self._compute_percent_amount_tax_inc(
+                order, lines
+            )
+        elif self.discount_type == "percentage":
+            percent_by_line = dict.fromkeys(lines, self.discount_amount)
+        else:
+            raise ValidationError(
+                _('Discount promotion of type %s is not supported') %
+                self.discount_type
+            )
+        return percent_by_line
+
     @api.multi
     def _apply_discount_to_order_lines(self, lines):
         self.ensure_one()
         if not self.promo_type == 'discount':
             return
-        if not self.discount_type == 'percentage':
-            raise ValidationError(
-                _('Discount promotion of type %s is not supported') %
-                self.discount_type)
 
         lines_by_order = defaultdict(self.env['sale.order.line'].browse)
         for line in lines:
@@ -301,12 +340,15 @@ according to the strategy
         # methods on each line updated. Indeed, update on a X2many field
         # is always done in norecompute on the parent...
         for order, _lines in lines_by_order.items():
+            discount_by_line = self._compute_percent_discount_by_lines(
+                order, lines)
             vals = []
             for line in _lines:
+                percent_discount = discount_by_line[line]
                 discount = line.discount
                 if self.multi_rule_strategy != 'cumulate':
                     discount = 0.0
-                discount += self.discount_amount
+                discount += percent_discount
                 if self.rule_type == 'coupon':
                     v = {
                         'discount': discount,

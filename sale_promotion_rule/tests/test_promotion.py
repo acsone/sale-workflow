@@ -5,6 +5,9 @@
 
 from odoo.tests.common import TransactionCase
 from odoo.exceptions import UserError
+from odoo.tools import float_compare
+
+VALID_COUPON_CODE = "ELDONGHUT"
 
 
 class AbstractCommonPromotionCase(object):
@@ -12,10 +15,11 @@ class AbstractCommonPromotionCase(object):
     def _get_promotion_rule_coupon_values(self):
         return {
             "name": "Best Promo",
-            "code": "ELDONGHUT",
+            "code": VALID_COUPON_CODE,
             "rule_type": "coupon",
             "promo_type": "discount",
             "discount_amount": 20.00,
+            "discount_type": "percentage",
             "minimal_amount": 50.00,
             "restriction_amount_field": "amount_untaxed",
             "multi_rule_strategy": "use_best"
@@ -27,6 +31,7 @@ class AbstractCommonPromotionCase(object):
             "rule_type": "auto",
             "promo_type": "discount",
             "discount_amount": 10.00,
+            "discount_type": "percentage",
             "minimal_amount": 50.00,
             "restriction_amount_field": "amount_untaxed",
             "multi_rule_strategy": "use_best"
@@ -34,6 +39,8 @@ class AbstractCommonPromotionCase(object):
 
     def set_up(self, sale_xml_id):
         self.sale = self.env.ref(sale_xml_id)
+        self.price_precision_digits = self.env[
+            'decimal.precision'].precision_get('Product Price')
         self.sale_promotion_rule = self.env["sale.promotion.rule"]
         data_coupon = self._get_promotion_rule_coupon_values()
         self.promotion_rule_coupon = self.sale_promotion_rule.search([
@@ -70,7 +77,7 @@ class PromotionCase(TransactionCase, AbstractCommonPromotionCase):
         self.set_up('sale.sale_order_3')
 
     def test_add_valid_discount_code_for_all_line(self):
-        self.add_coupon_code('ELDONGHUT')
+        self.add_coupon_code(VALID_COUPON_CODE)
         for line in self.sale.order_line:
             self.check_discount_rule_set(line, self.promotion_rule_coupon)
 
@@ -81,7 +88,7 @@ class PromotionCase(TransactionCase, AbstractCommonPromotionCase):
         # disount if one is already specified
         self.promotion_rule_coupon.multi_rule_strategy = 'keep_existing'
         self.promotion_rule_auto.multi_rule_strategy = 'keep_existing'
-        self.add_coupon_code('ELDONGHUT')
+        self.add_coupon_code(VALID_COUPON_CODE)
         self.assertEqual(first_line.discount, 20)
         self.assertEqual(first_line.coupon_promotion_rule_id.id, False)
         for line in self.sale.order_line[1:]:
@@ -104,7 +111,57 @@ class PromotionCase(TransactionCase, AbstractCommonPromotionCase):
         self.assertEqual(first_line.discount, 10)
         for line in self.sale.order_line:
             self.check_discount_rule_set(line, self.promotion_rule_auto)
-        self.add_coupon_code('ELDONGHUT')
+        self.add_coupon_code(VALID_COUPON_CODE)
         self.assertEqual(first_line.discount, 20)
         for line in self.sale.order_line:
             self.check_discount_rule_set(line, self.promotion_rule_coupon)
+
+    def test_discount_amount_untaxed(self):
+        self.promotion_rule_auto.minimal_amount = 999999999  # disable
+        self.promotion_rule_coupon.discount_type = "amount_tax_excluded"
+        amount_untaxed = self.sale.amount_untaxed
+        # we apply a discount of 20 on untaxed amount
+        self.add_coupon_code("ELDONGHUT")
+        new_amount = amount_untaxed - self.sale.amount_untaxed
+        self.assertEqual(
+            0,
+            float_compare(
+                new_amount,
+                20,
+                precision_digits=self.price_precision_digits
+            )
+        )
+
+    def test_discount_amount_taxed(self):
+        self.promotion_rule_auto.minimal_amount = 999999999  # disable
+        # add a tax in the prodduct
+        tax_include_id = self.env['account.tax'].create(
+            dict(name="Include tax 21",
+                 amount='21.00',
+                 price_include=True,
+                 type_tax_use='sale'))
+        so_line = self.sale.order_line[0]
+        so_line.product_id.taxes_id = [(6, 0, [tax_include_id.id])]
+        so_line.product_id_change()
+        tax_include_id = self.env['account.tax'].create(
+            dict(name="Include tax 5",
+                 amount='5.00',
+                 price_include=True,
+                 type_tax_use='sale'))
+        so_line = self.sale.order_line[1]
+        so_line.product_id.taxes_id = [(6, 0, [tax_include_id.id])]
+        so_line.product_id_change()
+        self.promotion_rule_coupon.discount_type = "amount_tax_included"
+        amount_total = self.sale.amount_total
+        # we apply a discount of 20 on amount taxed
+        self.add_coupon_code("ELDONGHUT")
+        new_amount = amount_total - self.sale.amount_total
+        self.assertEqual(
+            0,
+            float_compare(
+                new_amount,
+                20,
+                precision_digits=self.price_precision_digits
+            ),
+            "%s != 20" % (new_amount)
+        )
