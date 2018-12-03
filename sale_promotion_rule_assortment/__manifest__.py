@@ -11,7 +11,7 @@
     "development_status": "Beta",
     'license': 'AGPL-3',
     'author': 'ACSONE SA/NV,Odoo Community Association (OCA)',
-    'website': 'https://acsone.eu',
+    'website': 'https://github.com/OCA/sale-workflow',
     'depends': [
         'product_assortment',
         'sale_promotion_rule',
