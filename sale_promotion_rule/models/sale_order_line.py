@@ -47,4 +47,4 @@ class SaleOrderLine(models.Model):
     def _compute_applied_promotion_rule_ids(self):
         for rec in self:
             rec.applied_promotion_rule_ids = (
-                rec.coupon_promotion_rule_id + rec.promotion_rule_ids)
+                rec.coupon_promotion_rule_id | rec.promotion_rule_ids)
