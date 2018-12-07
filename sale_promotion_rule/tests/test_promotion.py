@@ -3,6 +3,8 @@
 # @author Sébastien BEAU <sebastien.beau@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
+import random
+
 from odoo.tests.common import TransactionCase
 from odoo.exceptions import UserError
 from odoo.tools import float_compare
@@ -184,3 +186,72 @@ class PromotionCase(TransactionCase, AbstractCommonPromotionCase):
             ),
             "%s != 20" % (new_amount)
         )
+
+    def test_discount_amount_rounding(self):
+        self.promotion_rule_auto.minimal_amount = 999999999  # disable
+        # add a tax in the prodduct and special price
+        so_line = self.sale.order_line[0]
+        tax_include_id = self.env['account.tax'].create(
+            dict(name="Include tax 21",
+                 amount='21.00',
+                 price_include=True,
+                 type_tax_use='sale'))
+        so_line.product_id.taxes_id = [(6, 0, [tax_include_id.id])]
+        so_line.product_id_change()
+        so_line.price_unit = 719.77
+        so_line = self.sale.order_line[1]
+        tax_include_id = self.env['account.tax'].create(
+            dict(name="Include tax 5",
+                 amount='5.00',
+                 price_include=True,
+                 type_tax_use='sale'))
+        so_line.product_id.taxes_id = [(6, 0, [tax_include_id.id])]
+        so_line.product_id_change()
+        so_line.price_unit = 13.66
+        self.promotion_rule_coupon.discount_type = "amount_tax_included"
+        discount_amount = 3.00
+        self.promotion_rule_coupon.discount_amount = discount_amount
+        amount_total = self.sale.amount_total
+        # we apply a discount of 8 on amount taxed
+        self.add_coupon_code("ELDONGHUT")
+        new_amount = amount_total - self.sale.amount_total
+        self.assertEqual(
+            0,
+            float_compare(
+                new_amount,
+                discount_amount,
+                precision_digits=self.price_precision_digits
+            ),
+            "%s != %s" % (new_amount, discount_amount)
+        )
+
+    def test_discount_amount_rounding_2(self):
+        self.promotion_rule_auto.minimal_amount = 999999999  # disable
+        # here we test with a large SO and price with large difference
+        for i in range(1, 10):
+            so_line = self.sale.order_line[1].copy({"order_id": self.sale.id})
+            so_line.price_unit = random.uniform(1.05, 100.99)
+        #for i in range(1, 10):
+        #    so_line = self.sale.order_line[1].copy({"order_id": self.sale.id})
+        #    so_line.price_unit = random.uniform(101.00, 500.99)
+        #for i in range(1, 10):
+        #    so_line = self.sale.order_line[1].copy({"order_id": self.sale.id})
+        #    so_line.price_unit = random.uniform(500.99, 1000.00)
+
+        for discount_amount in range(3, 30, 3):
+            self.promotion_rule_coupon.discount_type = "amount_tax_included"
+            self.promotion_rule_coupon.discount_amount = discount_amount
+            amount_total = self.sale.amount_total
+            # we apply a discount of 8 on amount taxed
+            self.add_coupon_code("ELDONGHUT")
+            new_amount = amount_total - self.sale.amount_total
+            self.assertEqual(
+                0,
+                float_compare(
+                    new_amount,
+                    discount_amount,
+                    precision_digits=self.price_precision_digits
+                ),
+                "%s != %s" % (new_amount, discount_amount)
+            )
+            self.sale.clear_promotions()
