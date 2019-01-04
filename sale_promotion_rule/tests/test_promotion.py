@@ -22,7 +22,7 @@ class AbstractCommonPromotionCase(object):
             "discount_amount": 20.00,
             "discount_type": "percentage",
             "minimal_amount": 50.00,
-            "restriction_amount_field": "amount_untaxed",
+            "is_minimal_amount_tax_incl": False,
             "multi_rule_strategy": "use_best"
         }
 
@@ -50,7 +50,7 @@ class AbstractCommonPromotionCase(object):
             "discount_amount_currency_id":
                 self.env.user.company_id.currency_id.id,
             "minimal_amount": 50.00,
-            "restriction_amount_field": "amount_untaxed",
+            "is_minimal_amount_tax_incl": True,
             "multi_rule_strategy": "use_best"
         }
 

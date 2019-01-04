@@ -77,14 +77,12 @@ class SalePromotionRule(models.Model):
             ('no_restriction', 'No restriction')
         ], default='no_restriction',
         required=True)
-    restriction_amount_field = fields.Selection(
-        selection=[
-            ('amount_total', 'Taxed amount'),
-            ('amount_untaxed', 'Untaxed amount'),
-        ], default='amount_total',
-        required=True)
     minimal_amount = fields.Float(
         digits=dp.get_precision('Discount'))
+    is_minimal_amount_tax_incl = fields.Boolean(
+        "Tax included into minimal amount?",
+        default=True,
+        required=True)
     multi_rule_strategy = fields.Selection(
         selection=[
             ('use_best', 'Use the best promotion'),
@@ -134,30 +132,45 @@ according to the strategy
                     "a specific amount"
                 ))
 
+    def _get_lines_excluded_from_total_amount(self, order):
+        return self.env['sale.order.line'].browse()
+
     def _get_default_currency_id(self):
         return self.env.user.company_id.currency_id.id
 
     def _check_valid_partner_list(self, order):
+        self.ensure_one()
         return not self.restrict_partner_ids\
             or order.partner_id.id in self.restrict_partner_ids.ids
 
     def _check_valid_pricelist(self, order):
+        self.ensure_one()
         return not self.restrict_pricelist_ids\
             or order.pricelist_id.id in self.restrict_pricelist_ids.ids
 
     def _check_valid_newsletter(self, order):
+        self.ensure_one()
         return not self.only_newsletter or not order.partner_id.opt_out
 
     def _check_valid_date(self, order):
+        self.ensure_one()
         return not (
             (self.date_to and fields.Date.today() > self.date_to) or
             (self.date_from and fields.Date.today() < self.date_from))
 
     def _check_valid_total_amount(self, order):
+        self.ensure_one()
         precision = self.env['decimal.precision'].precision_get('Discount')
+        amount = order.amount_total
+        line_price_field = 'price_total'
+        if not self.is_minimal_amount_tax_incl:
+            amount = order.amount_untaxed
+            line_price_field = 'price_subtotal'
+        lines = self._get_lines_excluded_from_total_amount(order)
+        amount -= sum([l[line_price_field] for l in lines])
         return float_compare(
             self.minimal_amount,
-            order[self.restriction_amount_field],
+            amount,
             precision_digits=precision) < 0
 
     def _check_valid_usage(self, order):
@@ -175,11 +188,13 @@ according to the strategy
         return True
 
     def _check_valid_multi_rule_strategy(self, order):
+        self.ensure_one()
         if self.multi_rule_strategy == 'exclusive':
             return not order.applied_promotion_rule_ids
         return True
 
     def _check_valid_rule_type(self, order):
+        self.ensure_one()
         if self.rule_type == 'coupon':
             return order.coupon_code is False
         return True
