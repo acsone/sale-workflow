@@ -10,10 +10,10 @@ def migrate(cr, version):
     cr.execute("""
         update sale_promotion_rule
         set is_minimal_amount_tax_incl=true
-        where restriction_amount_field='amount_total';
+        where restriction_amount='amount_total';
         """)
     cr.execute("""
         update sale_promotion_rule
         set is_minimal_amount_tax_incl=false
-        where restriction_amount_field='amount_untaxed';
+        where restriction_amount='amount_untaxed';
         """)
