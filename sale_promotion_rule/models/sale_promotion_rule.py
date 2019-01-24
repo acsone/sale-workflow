@@ -386,9 +386,9 @@ according to the strategy
     def _prepare_order_line_discount(self, order, lines):
         self.ensure_one()
         # takes all applied taxes
-        taxes = order.mapped('order_line.tax_id')
-        # taxes order matters!
-        taxes = taxes.search([('id', 'in', taxes.ids)])
+        taxes = self.discount_product_id.taxes_id
+        if order.fiscal_position_id:
+            taxes = order.fiscal_position_id.map_tax(taxes)
         price = self.discount_amount_currency_id.compute(
             from_amount=self.discount_amount,
             to_currency=order.currency_id)

@@ -105,6 +105,8 @@ class AbstractCommonPromotionCase(object):
                  amount='5.00',
                  price_include=False,
                  type_tax_use='sale'))
+        # add a tax on our discount product
+        self.discount_product_id.taxes_id = [(6, 0, [self.tax_exclude_21.id])]
 
     def add_coupon_code(self, coupon_code):
         self.sale.add_coupon(coupon_code)
@@ -331,7 +333,7 @@ class PromotionCase(TransactionCase, AbstractCommonPromotionCase):
             so_line.product_id.taxes_id = [(6, 0, [self.tax_exclude_5.id])]
             so_line.product_id_change()
             so_line.price_unit = price
-        for discount_amount in [3, 8, 15, 20, 25]:
+        for discount_amount in range(0, 20, 3):
             self.promotion_rule_fixed_amount.discount_type = \
                 "amount_tax_included"
             self.promotion_rule_fixed_amount.discount_amount = discount_amount
