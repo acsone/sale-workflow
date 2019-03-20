@@ -60,7 +60,7 @@ class SalePromotionRule(models.Model):
         return True
 
     def _is_promotion_valid_for_line(self, line):
-        res = super(SalePromotionRule, self)
+        res = super(SalePromotionRule, self)._is_promotion_valid_for_line(line)
         if self.filter_id:
             order_lines = self._get_promotions_valid_order_lines(line=line)
             if not order_lines:
