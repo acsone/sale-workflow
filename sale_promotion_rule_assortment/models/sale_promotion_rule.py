@@ -67,23 +67,7 @@ class SalePromotionRule(models.Model):
                 return False
         return res
 
-    def _get_line_amount_restriction_field(self):
-        restriction_amount_field = line_restriction_amount_mapping.get(
-            self.restriction_amount_field, False)
-        if not restriction_amount_field:
-            raise ValidationError(_('Restriction amount field unknown'))
-        return restriction_amount_field
+    def _get_lines_excluded_from_total_amount(self, order):
+        order_lines = self._get_promotions_valid_order_lines(order=order)
+        return order.order_line - order_lines
 
-    def _check_valid_total_amount(self, order):
-        if self.filter_id:
-            precision = self.env['decimal.precision'].precision_get('Discount')
-            restriction_amount = self._get_line_amount_restriction_field()
-
-            line_ids = self._get_promotions_valid_order_lines(order=order)
-            line_amount = sum([line[restriction_amount] for line in line_ids])
-
-            return float_compare(
-                self.minimal_amount,
-                line_amount,
-                precision_digits=precision) < 0
-        return super(SalePromotionRule, self)._check_valid_total_amount(order)
