@@ -61,3 +61,14 @@ class TestPromotionRuleAssortment(TransactionCase,
 
         self.check_discount_rule_set(self.line_consu,
                                      self.promotion_rule_auto)
+
+    def test_promotion_rule_assortment_excluded_lines(self):
+        self.promotion_rule_auto.minimal_amount = 0
+
+        self.sale.apply_promotions()
+
+        line = self.promotion_rule_auto._get_lines_excluded_from_total_amount(
+            self.sale)
+        self.assertEqual(len(line), 1)
+        self.assertEqual(line.id, self.line_service.id)
+
