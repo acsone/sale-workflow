@@ -22,8 +22,10 @@ class SaleOrder(models.Model):
             # we make this to isolate changed values:
             line2.product_uom_change()
             line2._onchange_discount()
-            line.price_unit = line2.price_unit
-            line.discount = line2.discount
+            line.update({
+                'price_unit': line2.price_unit,
+                'discount': line2.discount,
+            })
         return True
 
     @api.multi
