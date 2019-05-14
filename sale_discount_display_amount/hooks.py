@@ -7,21 +7,24 @@ from odoo import SUPERUSER_ID
 _logger = logging.getLogger(__name__)
 
 
+def _add_column(cr, table, column, column_type="numeric"):
+    query = """SELECT 1 FROM information_schema.columns
+            WHERE table_name = %s
+            AND column_name = %s"""
+    cr.execute(query, (table, column))
+
+    if not cr.fetchall():
+        cr.execute("""
+                ALTER TABLE %s ADD COLUMN %s %s;
+            """, (table, column, column_type))
+
+
 def pre_init_hook(cr):
     _logger.info("Create discount columns in database")
-    cr.execute("""
-        ALTER TABLE sale_order ADD COLUMN price_total_no_discount numeric;
-    """)
-    cr.execute("""
-        ALTER TABLE sale_order ADD COLUMN discount_total numeric;
-    """)
-    cr.execute("""
-        ALTER TABLE sale_order_line ADD COLUMN price_total_no_discount
-        numeric;
-    """)
-    cr.execute("""
-        ALTER TABLE sale_order_line ADD COLUMN discount_total numeric;
-    """)
+    _add_column(cr, 'sale_order', 'price_total_no_discount')
+    _add_column(cr, 'sale_order', 'discount_total')
+    _add_column(cr, 'sale_order_line', 'price_total_no_discount')
+    _add_column(cr, 'sale_order_line', 'discount_total')
 
 
 def post_init_hook(cr, registry):
