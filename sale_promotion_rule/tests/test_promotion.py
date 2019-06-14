@@ -128,3 +128,22 @@ class PromotionCase(TransactionCase, AbstractCommonPromotionCase):
         self.assertEqual(
             self.promotion_rule_coupon, self.sale.applied_promotion_rule_ids
         )
+
+    def test_multi_promotion_rules(self):
+        """
+        Ensure it's working in case of multi available promotions.
+        So the first promotion rule (promotion_rule_auto) should be check
+        (and not available due to minimal amount), then the promo_copy should
+        be check and applied.
+        :return:
+        """
+        promo_copy = self.promotion_rule_auto.copy({
+            'name': 'Almost free',
+        })
+        self.promotion_rule_auto.write({
+            'minimal_amount': 999999,
+        })
+        self.sale.apply_promotions()
+        for line in self.sale.order_line:
+            self.check_discount_rule_set(line, promo_copy)
+        return
