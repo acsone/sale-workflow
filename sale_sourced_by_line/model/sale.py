@@ -17,7 +17,7 @@ class SaleOrder(models.Model):
         # for compatibility with sale_quotation_sourcing
         if line._get_procurement_group_key()[0] == 10:
             if line.warehouse_id:
-                vals['name'] += '/' + line.warehouse_id.name
+                vals['name'] += '/' + line.warehouse_id.sudo().name
         return vals
 
     warehouse_id = fields.Many2one(
