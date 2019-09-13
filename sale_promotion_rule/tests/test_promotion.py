@@ -51,6 +51,7 @@ class AbstractCommonPromotionCase(object):
                 self.env.user.company_id.currency_id.id,
             "minimal_amount": 50.00,
             "is_minimal_amount_tax_incl": True,
+            "restriction_amount_field": "amount_untaxed",
             "multi_rule_strategy": "use_best"
         }
 
@@ -387,3 +388,22 @@ class PromotionCase(TransactionCase, AbstractCommonPromotionCase):
                 "%s != %s" % (new_amount, discount_amount)
             )
             self.sale.clear_promotions()
+
+    def test_multi_promotion_rules(self):
+        """
+        Ensure it's working in case of multi available promotions.
+        So the first promotion rule (promotion_rule_auto) should be check
+        (and not available due to minimal amount), then the promo_copy should
+        be check and applied.
+        :return:
+        """
+        promo_copy = self.promotion_rule_auto.copy({
+            'name': 'Almost free',
+        })
+        self.promotion_rule_auto.write({
+            'minimal_amount': 999999,
+        })
+        self.sale.apply_promotions()
+        for line in self.sale.order_line:
+            self.check_discount_rule_set(line, promo_copy)
+        return
