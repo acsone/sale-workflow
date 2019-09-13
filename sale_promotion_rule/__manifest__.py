@@ -5,7 +5,7 @@
 {
     "name": "Sale Promotion Rule",
     "summary": "Module to manage promotion rule on sale order",
-    "version": "10.0.1.0.0",
+    "version": "10.0.2.0.0",
     "development_status": "Beta",
     "category": "Sale",
     "website": "https://github.com/OCA/sale-workflow",
@@ -21,5 +21,6 @@
         'views/sale_order.xml',
         'views/sale_promotion_rule.xml',
         'security/ir.model.access.csv',
+        'security/sale_promotion_rule.xml',
     ]
 }
