@@ -15,6 +15,7 @@
                 ],
     'data': ['views/sale_view.xml',
              'views/sale_workflow_process_view.xml',
+             'views/account_invoice.xml',
              'data/automatic_workflow_data.xml',
              'security/ir.model.access.csv',
              ],
