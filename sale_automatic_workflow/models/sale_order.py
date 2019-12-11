@@ -73,7 +73,14 @@ class SaleOrder(models.Model):
         return super().action_invoice_create(grouped=grouped, final=final)
 
     def write(self, vals):
-        workflow = self.workflow_process_id
-        if workflow.invoice_date_is_order_date and vals.get("date_order"):
-            del vals["date_order"]
+        if vals.get("state") == "sale" and vals.get("date_order"):
+            sales_keep_order_date = self.filtered(
+                lambda sale: sale.workflow_process_id.invoice_date_is_order_date
+            )
+            if sales_keep_order_date:
+                new_vals = vals.copy()
+                del new_vals["date_order"]
+                res = super(SaleOrder, sales_keep_order_date).write(new_vals)
+                res |= super(SaleOrder, self - sales_keep_order_date).write(vals)
+                return res
         return super(SaleOrder, self).write(vals)
