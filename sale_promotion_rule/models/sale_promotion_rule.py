@@ -17,6 +17,7 @@ _logger = logging.getLogger(__name__)
 class SalePromotionRule(models.Model):
     _name = 'sale.promotion.rule'
     _description = 'Sale Promotion Rule'
+    _order = "sequence, id"
 
     sequence = fields.Integer(default=10)
     company_id = fields.Many2one(
