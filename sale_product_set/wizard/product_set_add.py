@@ -26,14 +26,15 @@ class ProductSetAdd(models.TransientModel):
         max_sequence = 0
         if so.order_line:
             max_sequence = max([line.sequence for line in so.order_line])
-        sale_order_line_env = self.env['sale.order.line']
-        sale_order_line = self.env['sale.order.line']
+        sale_order_line_env = self.env["sale.order.line"]
+        values = []
         for set_line in self.product_set_id.set_line_ids:
-            sale_order_line |= sale_order_line_env.create(
+            values.append(
                 self.prepare_sale_order_line_data(
-                    so_id, set_line,
-                    max_sequence=max_sequence))
-        return sale_order_line
+                    so_id, set_line, max_sequence=max_sequence
+                )
+            )
+        return sale_order_line_env.create(values)
 
     @api.multi
     def prepare_sale_order_line_data(self, sale_order_id, set_line,
