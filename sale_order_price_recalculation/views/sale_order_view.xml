@@ -9,9 +9,12 @@
             <button name="action_unlock" position="after">
                 <button name="recalculate_prices" class="ml-2 btn btn-default"
                         string="Recalculate prices" Help="Apply the current pricelist"
-                        type="object" attrs="{'invisible':[('state','not in', ['draft', 'sent'])]}"/>
+                        type="object" invisible="1"/>
                 <button name="recalculate_names" class="ml-2 btn btn-default"
                         string="Reset descriptions" Help="Erase custom descriptions of all lines"
+                        type="object" invisible="1"/>
+                <button name="recompute_lines" class="ml-2 btn btn-default"
+                        string="Recompute lines" Help="Update price, description, history, discount."
                         type="object" attrs="{'invisible':[('state','not in', ['draft', 'sent'])]}"/>
             </button>
         </field>
