@@ -20,6 +20,7 @@
     "installable": True,
     "depends": [
         "sale",
+        "contract_sale_tiered_pricing",
     ],
     "data": [
         "views/sale_order_view.xml",
