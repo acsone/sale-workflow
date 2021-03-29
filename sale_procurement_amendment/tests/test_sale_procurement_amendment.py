@@ -4,31 +4,39 @@
 from odoo.tests import common
 
 
-class TestSaleProcurementAmendment(common.TransactionCase):
-    def setUp(self):
-        super(TestSaleProcurementAmendment, self).setUp()
-        self.sale_obj = self.env["sale.order"]
-        self.sale_order_line_obj = self.env["sale.order.line"]
-        self.product1 = self.env.ref("product.product_product_12")
-        self.agrolait = self.env.ref("base.res_partner_2")
+class TestSaleProcurementAmendment(common.SavepointCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.sale_obj = cls.env["sale.order"]
+        cls.sale_order_line_obj = cls.env["sale.order.line"]
+        cls.product1 = cls.env.ref("product.product_product_12")
+        cls.agrolait = cls.env.ref("base.res_partner_2")
 
         # Create a MTO Rule on Stock - Avoid depending on purchase
         # Create another Stock location
         vals = {
             "name": "Stock MTO",
-            "location_id": self.env.ref("stock.stock_location_locations").id,
+            "location_id": cls.env.ref("stock.stock_location_locations").id,
             "usage": "internal",
         }
-        loc_mto = self.env["stock.location"].create(vals)
+        loc_mto = cls.env["stock.location"].create(vals)
+
+        vals = {
+            "name": "New MTO",
+        }
+        cls.route_mto = cls.env["stock.location.route"].create(vals)
 
         vals = {
             "name": "STOCK MTO -> Stock",
-            "action": "move",
-            "picking_type_id": self.env.ref("stock.picking_type_internal").id,
+            "action": "pull",
+            "picking_type_id": cls.env.ref("stock.picking_type_internal").id,
             "location_src_id": loc_mto.id,
-            "location_id": self.env.ref("stock.stock_location_stock").id,
+            "location_id": cls.env.ref("stock.stock_location_stock").id,
+            "route_id": cls.route_mto.id,
         }
-        self.env["procurement.rule"].create(vals)
+        cls.env["stock.rule"].create(vals)
+        cls.product1.route_ids |= cls.route_mto
 
     def _create_sale_order(self):
 
@@ -66,8 +74,10 @@ class TestSaleProcurementAmendment(common.TransactionCase):
         """
         self._create_sale_order()
         self.order.action_confirm()
+        self.order.picking_ids.action_assign()
 
-        self.order.picking_ids.pack_operation_ids.qty_done = 1.0
+        self.order.picking_ids.move_line_ids.qty_done = 1.0
+        self.order.picking_ids.move_lines.invalidate_cache()
         self.assertFalse(self.order.picking_ids.move_lines.can_be_amended,)
         self.assertTrue(self.sale_line.pickings_in_progress,)
 
@@ -80,13 +90,13 @@ class TestSaleProcurementAmendment(common.TransactionCase):
         self._create_sale_order()
         self.order.action_confirm()
         self.order.picking_ids.action_assign()
-        self.order.picking_ids.pack_operation_ids.qty_done = 1.0
+        self.order.picking_ids.move_line_ids.qty_done = 1.0
         wizard = self.env["stock.backorder.confirmation"].create(
-            {"pick_id": self.order.picking_ids.id,}
+            {"pick_ids": [(6, 0, self.order.picking_ids.ids)]}
         )
         wizard.process()
         # self.order.picking_ids.do_transfer()
-        self.assertEquals(
+        self.assertItemsEqual(
             [True, False], self.order.picking_ids.mapped("move_lines.can_be_amended"),
         )
         self.assertTrue(self.sale_line.pickings_in_progress,)
@@ -121,31 +131,30 @@ class TestSaleProcurementAmendment(common.TransactionCase):
         Decrease Sale Order Line
         :return:
         """
-        self.product1.route_ids = self.env["stock.location.route"].browse()
         self.product1.route_ids += self.env.ref("stock.route_warehouse0_mto")
         self._create_sale_order()
         self.order.action_confirm()
 
-        procurement_mto = self.env["procurement.order"].search(
+        move_mto = self.env["stock.move"].search(
             [
                 ("group_id", "=", self.order.procurement_group_id.id),
                 ("location_id", "=", self.env.ref("stock.stock_location_stock").id),
             ]
         )
         self.assertEquals(
-            1, len(procurement_mto),
+            1, len(move_mto),
         )
         self.assertEquals(
-            10.0, procurement_mto.product_qty,
+            10.0, move_mto.product_qty,
         )
 
         # Decrease qty
         self.sale_line.write({"product_uom_qty": 9.0})
 
         self.assertEquals(
-            "cancel", procurement_mto.state,
+            "cancel", move_mto.state,
         )
-        procurement_mto = self.env["procurement.order"].search(
+        move_mto = self.env["stock.move"].search(
             [
                 ("state", "!=", "cancel"),
                 ("group_id", "=", self.order.procurement_group_id.id),
@@ -153,19 +162,19 @@ class TestSaleProcurementAmendment(common.TransactionCase):
             ]
         )
         self.assertEquals(
-            1, len(procurement_mto),
+            1, len(move_mto),
         )
         self.assertEquals(
-            9.0, procurement_mto.product_qty,
+            9.0, move_mto.product_qty,
         )
 
         # Decrease qty
         self.sale_line.write({"product_uom_qty": 8.0})
 
         self.assertEquals(
-            "cancel", procurement_mto.state,
+            "cancel", move_mto.state,
         )
-        procurement_mto = self.env["procurement.order"].search(
+        move_mto = self.env["stock.move"].search(
             [
                 ("state", "!=", "cancel"),
                 ("group_id", "=", self.order.procurement_group_id.id),
@@ -173,11 +182,11 @@ class TestSaleProcurementAmendment(common.TransactionCase):
             ]
         )
         self.assertEquals(
-            1, len(procurement_mto),
+            1, len(move_mto),
         )
         # Check procurement qty
         self.assertEquals(
-            8.0, procurement_mto.product_qty,
+            8.0, move_mto.product_qty,
         )
         # Check move out qty
         move_out = self.order.picking_ids.mapped("move_lines").filtered(
@@ -191,22 +200,16 @@ class TestSaleProcurementAmendment(common.TransactionCase):
 
         # Increase qty
         self.sale_line.write({"product_uom_qty": 11.0})
-        procurement_mto = self.env["procurement.order"].search(
+        move_mto = self.env["stock.move"].search(
             [
                 ("state", "!=", "cancel"),
                 ("group_id", "=", self.order.procurement_group_id.id),
                 ("location_id", "=", self.env.ref("stock.stock_location_stock").id),
             ]
         )
-        self.assertEquals(2, len(procurement_mto))
         # Check procurement qty
-        qty = 0.0
-        for proc in procurement_mto:
-            qty += proc.product_qty
-
-        self.assertEquals(
-            11.0, qty,
-        )
+        self.assertEquals(2, len(move_mto))
+        self.assertEqual(11, sum(move_mto.mapped("product_qty")))
         # Check move out qty
         moves_out = self.order.picking_ids.mapped("move_lines").filtered(
             lambda m: m.state != "cancel"

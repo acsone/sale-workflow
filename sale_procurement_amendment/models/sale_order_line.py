@@ -12,7 +12,6 @@ class SaleOrderLine(models.Model):
     to_be_procured = fields.Boolean(compute="_compute_to_be_procured",)
     pickings_in_progress = fields.Boolean(compute="_compute_pickings_in_progress")
 
-    @api.multi
     @api.depends("order_id.picking_ids.can_be_amended")
     def _compute_pickings_in_progress(self):
         """
@@ -21,20 +20,17 @@ class SaleOrderLine(models.Model):
         we are in the 'pickings_in_progress' situation.
         :return:
         """
-        for line in self.filtered(
+        line_in_progres = self.filtered(
             lambda l: any(
                 picking.state != "cancel" and not picking.can_be_amended
                 for picking in l.order_id.picking_ids
             )
-        ):
-            line.pickings_in_progress = True
+        )
+        line_in_progres.update({"pickings_in_progress": True})
+        (self - line_in_progres).update({"pickings_in_progress": False})
 
-    @api.multi
     @api.depends(
-        "procurement_ids",
-        "procurement_ids.state",
-        "procurement_ids.product_qty",
-        "product_uom_qty",
+        "move_ids", "move_ids.state", "move_ids.product_qty", "product_uom_qty",
     )
     def _compute_to_be_procured(self):
         """
@@ -47,12 +43,13 @@ class SaleOrderLine(models.Model):
         )
         for line in self:
             qty = 0.0
-            for proc in line.procurement_ids.filtered(lambda p: p.state != "cancel"):
+            for proc in line.move_ids.filtered(lambda p: p.state != "cancel"):
                 qty += proc.product_qty
             if float_compare(qty, line.product_uom_qty, precision_digits=precision) < 0:
                 line.to_be_procured = True
+            else:
+                line.to_be_procured = False
 
-    @api.multi
     def write(self, values):
         precision = self.env["decimal.precision"].precision_get(
             "Product Unit of Measure"
@@ -75,9 +72,9 @@ class SaleOrderLine(models.Model):
             for line in lines_lower:
                 if not line.pickings_in_progress:
                     # LIMITATION - Don't take all procurement at once here
-                    for procurement in line.procurement_ids:
-                        procurement.cancel()
+                    for move in line.move_ids:
+                        move._action_cancel()
             self.filtered(
                 lambda line: line.state == "sale" and line.to_be_procured
-            )._action_procurement_create()
+            )._action_launch_stock_rule()
         return res
