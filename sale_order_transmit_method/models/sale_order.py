@@ -22,12 +22,7 @@ class SaleOrder(models.Model):
         )
 
     @api.multi
-    def _finalize_invoices(self, invoices, references):
-        res = super()._finalize_invoices(invoices, references)
-        for invoice in invoices.values():
-            transmit_methods = invoice.invoice_line_ids.mapped(
-                'sale_line_ids.order_id.transmit_method_id'
-            )
-            if len(transmit_methods) == 1:
-                invoice.transmit_method_id = transmit_methods
+    def _prepare_invoice(self):
+        res = super()._prepare_invoice()
+        res.update({'transmit_method_id': self.transmit_method_id.id})
         return res
