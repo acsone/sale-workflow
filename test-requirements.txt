@@ -1,0 +1,3 @@
+# Pending PR's
+
+odoo14-addon-sale-order-line-chained-move @ git+https://github.com/acsone/sale-workflow.git@13.0-add-sale-line-all-moves-dro#subirectory=setup/sale_order_line_chained_move
