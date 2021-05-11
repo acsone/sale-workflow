@@ -1,4 +1,4 @@
-# Copyright 2018 Acsone Sa/NV
+# Copyright 2018-2021 Acsone Sa/NV
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from odoo.tests.common import TransactionCase

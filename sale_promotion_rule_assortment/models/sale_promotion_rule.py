@@ -1,4 +1,4 @@
-# Copyright 2018 Acsone SA/Nv
+# Copyright 2018-2021 Acsone SA/Nv
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from odoo import api, fields, models
