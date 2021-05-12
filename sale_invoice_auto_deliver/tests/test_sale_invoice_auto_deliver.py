@@ -35,7 +35,6 @@ class TestSaleInvoiceAutoDeliver(common.TransactionCase):
         Validate invoice + Auto Deliver
         Check exception raises
         """
-        product_id = self.env.ref("product.product_product_11")
         product_id = self.env["product.product"].create(
             {
                 "name": "product_test",
