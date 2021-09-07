@@ -77,5 +77,5 @@ class SaleAdvancePaymentInv(models.TransientModel):
                     )
                 )
             else:
-                self.advance_payment_method = "all_auto"
+                self.advance_payment_method = "delivered"
         return super(SaleAdvancePaymentInv, self).create_invoices()
