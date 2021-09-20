@@ -1,0 +1,1 @@
+odoo14-addon-sale-promotion-rule @ git+https://github.com/OCA/sale-workflow.git@refs/pull/1583/head#subdirectory=setup/sale_promotion_rule
