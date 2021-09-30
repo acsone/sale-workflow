@@ -1,0 +1,2 @@
+
+odoo14-addon-sale-order-line-chained-move @ git+https://github.com/OCA/sale-workflow.git@refs/pull/1572/head#subdirectory=setup/sale_order_line_chained_move
