@@ -8,7 +8,7 @@ def _fill_in_related_sale_line(env):
         UPDATE purchase_order_line pol
             SET related_sale_line_id =
                 (SELECT related_sale_line_id
-                    FROM stock_move WHERE created_purchase_line_id = pol.id)
+                    FROM stock_move WHERE created_purchase_line_id = pol.id LIMIT 1)
             WHERE related_sale_line_id IS NULL
             AND EXISTS (
                 SELECT 1 FROM stock_move
