@@ -14,4 +14,5 @@
     'author': 'Akretion, Odoo Community Association (OCA)',
     'website': 'https://github.com/OCA/sale-workflow',
     'installable': True,
+    "pre_init_hook": "pre_init_hook",
 }
