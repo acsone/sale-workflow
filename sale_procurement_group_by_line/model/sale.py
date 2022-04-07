@@ -39,11 +39,12 @@ class SaleOrderLine(models.Model):
         if not previous_product_uom_qty:
             previous_product_uom_qty = {}
         for line in self:
+            line_qty = line._get_product_qty()
             if line.state != "sale" or line.product_id.type not in ("consu", "product"):
                 continue
             qty = line._get_qty_procurement(previous_product_uom_qty)
             if (
-                float_compare(qty, line.product_uom_qty, precision_digits=precision)
+                float_compare(qty, line_qty, precision_digits=precision)
                 >= 0
             ):
                 continue
@@ -84,10 +85,10 @@ class SaleOrderLine(models.Model):
             line.procurement_group_id = group_id
 
             values = line._prepare_procurement_values(group_id=group_id)
-            product_qty = line.product_uom_qty - qty
+            product_qty = line_qty - qty
             product_qty_uom = product_qty
 
-            procurement_uom = line.product_uom
+            procurement_uom = line._get_product_uom()
             quant_uom = line.product_id.uom_id
             get_param = self.env["ir.config_parameter"].sudo().get_param
             if (
