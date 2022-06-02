@@ -20,13 +20,21 @@ class SaleOrder(models.Model):
                 dict['product_tmpl_id'] = line.product_tmpl_id
             line2 = self.env['sale.order.line'].new(dict)
             # we make this to isolate changed values:
-            line2.product_uom_change()
-            line2._onchange_discount()
-            line.write({
-                'price_unit': line2.price_unit,
-                'discount': line2.discount,
-            })
+            vals = self._get_update_price_fields_and_values(line2)
+            line.write(vals)
         return True
+
+    @api.model
+    def _get_update_price_fields_and_values(self, in_memory_line):
+        """Return a list of fields to update in the order lines.
+        :return: dict of fields and values to update
+        """
+        in_memory_line.product_uom_change()
+        in_memory_line._onchange_discount()
+        return {
+            'price_unit': in_memory_line.price_unit,
+            'discount': in_memory_line.discount,
+        }
 
     @api.multi
     def recalculate_names(self):
