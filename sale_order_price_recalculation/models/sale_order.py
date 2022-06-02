@@ -14,14 +14,21 @@ class SaleOrder(models.Model):
 
     @api.multi
     def recalculate_prices(self):
-        for line in self.mapped('order_line'):
-            dict = line._convert_to_write(line.read()[0])
-            if 'product_tmpl_id' in line._fields:
-                dict['product_tmpl_id'] = line.product_tmpl_id
-            line2 = self.env['sale.order.line'].new(dict)
-            # we make this to isolate changed values:
-            vals = self._get_update_price_fields_and_values(line2)
-            line.write(vals)
+        for order in self:
+            line_to_write = {}
+            for line in order.mapped('order_line'):
+                dict = line._convert_to_write(line.read()[0])
+                if 'product_tmpl_id' in line._fields:
+                    dict['product_tmpl_id'] = line.product_tmpl_id
+                line2 = self.env['sale.order.line'].new(dict)
+                # we make this to isolate changed values:
+                vals = self._get_update_price_fields_and_values(line2)
+                for k in vals:
+                    if dict[k] != vals[k]:
+                        line_to_write[line.id] = vals
+                        break
+            if line_to_write:
+                order.write({'order_line': [(1, k, v) for k, v in line_to_write.items()]})
         return True
 
     @api.model
