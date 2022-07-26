@@ -13,6 +13,7 @@ class TestSaleStock(TestSale):
         super().setUp()
         self.partner = self.env.ref("base.res_partner_1")
         self.product = self.env.ref("product.product_delivery_01")
+        self.product_service = self.env.ref("product.product_product_1")
         self.product2 = self.env.ref("product.product_delivery_02")
         self.product3 = self.env.ref("product.product_order_01")
         self.carrier1 = self.env.ref("delivery.delivery_carrier")
@@ -21,13 +22,19 @@ class TestSaleStock(TestSale):
         self.env["stock.quant"]._update_available_quantity(
             self.product, self.stock_location, 100
         )
+        self.precision = self.env["decimal.precision"].precision_get(
+            "Product Unit of Measure"
+        )
 
     def _manual_delivery_wizard(self, records, vals=None):
         if not vals:
             vals = {}
         return (
             self.env["manual.delivery"]
-            .with_context(active_model=records._name, active_ids=records.ids,)
+            .with_context(
+                active_model=records._name,
+                active_ids=records.ids,
+            )
             .create(vals)
         )
 
@@ -51,7 +58,18 @@ class TestSaleStock(TestSale):
                             "product_uom": self.product.uom_id.id,
                             "price_unit": self.product.list_price,
                         },
-                    )
+                    ),
+                    (
+                        0,
+                        0,
+                        {
+                            "name": self.product_service.name,
+                            "product_id": self.product_service.id,
+                            "product_uom_qty": 5.0,
+                            "product_uom": self.product_service.uom_id.id,
+                            "price_unit": self.product_service.list_price,
+                        },
+                    ),
                 ],
                 "pricelist_id": self.env.ref("product.list0").id,
                 "manual_delivery": True,
@@ -84,6 +102,10 @@ class TestSaleStock(TestSale):
         self.assertEqual(
             len(order.picking_ids), 1.0, "Picking number should remain 1.0"
         )
+        sale_line_1 = order.order_line[0]
+        sale_line_2 = order.order_line[1]
+        self.assertNotAlmostEqual(sale_line_1.qty_procured, 0, self.precision)
+        self.assertAlmostEqual(sale_line_2.qty_procured, 0, self.precision)
 
     def test_01_sale_standard_delivery(self):
         """
@@ -181,7 +203,9 @@ class TestSaleStock(TestSale):
         wizard.line_ids.write({"quantity": 0.0})
         wizard.confirm()
         self.assertEqual(
-            len(order.picking_ids), 1.0, "No picking should've been created",
+            len(order.picking_ids),
+            1.0,
+            "No picking should've been created",
         )
         # try to create a manual delivery with more quantity than the ordered
         wizard = self._manual_delivery_wizard(order)
@@ -193,7 +217,9 @@ class TestSaleStock(TestSale):
         wizard.line_ids.write({"quantity": 3.0})
         wizard.confirm()
         self.assertEqual(
-            len(order.picking_ids), 2.0, "Picking number doesn't match",
+            len(order.picking_ids),
+            2.0,
+            "Picking number doesn't match",
         )
 
     def test_03_sale_selected_lines(self):
@@ -299,7 +325,9 @@ class TestSaleStock(TestSale):
             ]
         )
         self.assertEqual(
-            undelivered, order2.order_line, "Bad pending qty to deliver filter",
+            undelivered,
+            order2.order_line,
+            "Bad pending qty to deliver filter",
         )
 
     def test_03_sale_multi_delivery(self):
@@ -403,7 +431,8 @@ class TestSaleStock(TestSale):
             ' after "manual delivery" wizard call with same date',
         )
         self.assertEqual(
-            sum(first_picking.mapped("move_lines.product_uom_qty")), 7,
+            sum(first_picking.mapped("move_lines.product_uom_qty")),
+            7,
         )
 
     def test_04_sale_single_picking(self):
@@ -514,5 +543,7 @@ class TestSaleStock(TestSale):
         wizard.line_ids.write({"quantity": 2.0})
         wizard.confirm()
         self.assertEqual(
-            len(order.picking_ids), 2, "The first picking should be re-used",
+            len(order.picking_ids),
+            2,
+            "The first picking should be re-used",
         )
