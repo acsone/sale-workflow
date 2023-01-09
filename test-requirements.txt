@@ -1,0 +1,1 @@
+odoo-addon-stock-procurement-customer @ git+https://github.com/OCA/stock-logistics-workflow@refs/pull/1185/head#subdirectory=setup/stock_procurement_customer
