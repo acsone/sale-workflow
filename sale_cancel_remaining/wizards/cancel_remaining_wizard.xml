@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+  <record id="cancel_remaining_wizard_view_form" model="ir.ui.view">
+    <field name="model">cancel.remaining.wizard</field>
+    <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <h3>Cancel remaining quantity</h3>
+        </sheet>
+        <footer>
+          <button
+                        name="cancel_remaining_qty"
+                        string="Validate"
+                        type="object"
+                        class="oe_highlight"
+                    />
+          <button string="Cancel" class="oe_link" special="cancel" />
+        </footer>
+      </form>
+    </field>
+  </record>
+  <record id="action_cancel_remaining_wizard" model="ir.actions.act_window">
+    <field name="name">Cancel remaining qty</field>
+    <field name="type">ir.actions.act_window</field>
+    <field name="res_model">cancel.remaining.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+</odoo>
