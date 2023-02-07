@@ -13,7 +13,8 @@ class SaleOrder(models.Model):
         comodel_name="sale.delivery.block.reason",
         tracking=True,
         string="Delivery Block Reason",
-        readonly=True,
+        compute="_compute_delivery_block_id",
+        store=True,
         states={"draft": [("readonly", False)], "sent": [("readonly", False)]},
     )
 
@@ -26,12 +27,10 @@ class SaleOrder(models.Model):
             )
 
     @api.onchange("partner_id")
-    def onchange_partner_id(self):
+    def _compute_delivery_block_id(self):
         """Add the 'Default Delivery Block Reason' if set in the partner."""
-        res = super().onchange_partner_id()
         for so in self:
             so.delivery_block_id = so.partner_id.default_delivery_block or False
-        return res
 
     def action_remove_delivery_block(self):
         """Remove the delivery block and create procurements as usual."""
@@ -49,13 +48,3 @@ class SaleOrder(models.Model):
             if so.partner_id.default_delivery_block and not so.delivery_block_id:
                 so.delivery_block_id = so.partner_id.default_delivery_block
         return new_so
-
-
-class SaleOrderLine(models.Model):
-    _inherit = "sale.order.line"
-
-    def _action_launch_stock_rule(self, previous_product_uom_qty=False):
-        return super(
-            SaleOrderLine,
-            self.filtered(lambda line: not line.order_id.delivery_block_id),
-        )._action_launch_stock_rule(previous_product_uom_qty=previous_product_uom_qty)
