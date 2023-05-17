@@ -1,1 +1,2 @@
 odoo_test_helper
+odoo-addon-sale-product-set @ git+https://github.com/OCA/sale-workflow.git@refs/pull/2477/head#subdirectory=setup/sale_product_set
