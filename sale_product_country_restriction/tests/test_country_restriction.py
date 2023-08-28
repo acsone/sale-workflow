@@ -1,10 +1,10 @@
 # Copyright 2018 ACSONE SA/NV
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-
-import mock
+from unittest.mock import patch
 
 from odoo import fields
 from odoo.exceptions import ValidationError
+from odoo.fields import Date
 
 from .common import SaleCountryRestrictionCommon
 
@@ -17,8 +17,8 @@ class TestSaleRestriction(SaleCountryRestrictionCommon):
                 "product_id": self.product_2.id,
             }
         )
-        with mock.patch.object(fields.Date, "today") as today:
-            today.return_value = "2018-03-20"
+        with patch.object(fields.Date, "today") as today:
+            today.return_value = Date.to_date("2018-03-20")
             res = line._onchange_product_country_restriction()
             self.assertIn("message", res.get("warning"))
 
@@ -36,8 +36,8 @@ class TestSaleRestriction(SaleCountryRestrictionCommon):
                 "product_id": self.product_2.id,
             }
         )
-        with mock.patch.object(fields.Date, "today") as today:
-            today.return_value = "2018-03-20"
+        with patch.object(fields.Date, "today") as today:
+            today.return_value = Date.to_date("2018-03-20")
             res = line._onchange_product_country_restriction()
             self.assertFalse(res.get("warning"))
 
@@ -55,8 +55,8 @@ class TestSaleRestriction(SaleCountryRestrictionCommon):
                 "product_id": self.product_2.id,
             }
         )
-        with mock.patch.object(fields.Date, "today") as today:
-            today.return_value = "2018-03-20"
+        with patch.object(fields.Date, "today") as today:
+            today.return_value = Date.to_date("2018-03-20")
             res = line._onchange_product_country_restriction()
             self.assertFalse(res)
 
@@ -100,6 +100,6 @@ class TestSaleRestriction(SaleCountryRestrictionCommon):
         res = self.sale_order._onchange_partners_check_country()
         self.assertNotIn("warning", res)
 
-        self.partner.restriction_id = False
-        self.sale_order._onchange_partners_check_restriction()
+        self.partner.country_restriction_id = False
+        res = self.sale_order._onchange_partners_check_restriction()
         self.assertIn("warning", res)

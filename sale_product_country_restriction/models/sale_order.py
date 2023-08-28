@@ -38,7 +38,6 @@ class SaleOrder(models.Model):
         self.ensure_one()
         return _("A country restriction of the partner %s must be set") % partner
 
-    @api.multi
     def _check_partner_shipping_country_restriction(self):
         """
         Country Restriction on Partner is mandatory
@@ -52,7 +51,6 @@ class SaleOrder(models.Model):
             if partner and not partner.country_id:
                 raise ValidationError(self._get_no_restriction_partner_message(partner))
 
-    @api.multi
     def _get_country_restriction_products_to_check(self):
         """
         This is a hook if one wants to filter checked products
@@ -61,7 +59,6 @@ class SaleOrder(models.Model):
         self.ensure_one()
         return self.order_line.mapped("product_id")
 
-    @api.multi
     def check_country_restriction(self):
         restriction_obj = self.env["product.country.restriction"]
         self._check_partner_shipping_country_restriction()
@@ -78,13 +75,11 @@ class SaleOrder(models.Model):
                 if messages:
                     raise ValidationError(messages)
 
-    @api.multi
     def action_confirm(self):
         if self.env.user.company_id.enable_sale_country_restriction:
             self.check_country_restriction()
         return super(SaleOrder, self).action_confirm()
 
-    @api.multi
     @api.onchange("partner_shipping_id")
     def _onchange_partners_check_country(self):
         res = {}
@@ -99,7 +94,6 @@ class SaleOrder(models.Model):
                 res = _append_warning(res, warning)
         return res
 
-    @api.multi
     @api.onchange("partner_shipping_id")
     def _onchange_partners_check_restriction(self):
         res = {}

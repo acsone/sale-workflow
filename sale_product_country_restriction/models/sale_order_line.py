@@ -16,7 +16,7 @@ class SaleOrderLine(models.Model):
         :return: {'warning':...}
         """
         res = {}
-        if not self.env.user.company_id.enable_sale_country_restriction:
+        if not self.env.company.enable_sale_country_restriction:
             return res
         restriction_obj = self.env["product.country.restriction"]
         countries = self.order_id.partner_shipping_id.country_id
