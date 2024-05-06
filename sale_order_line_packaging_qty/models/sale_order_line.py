@@ -35,16 +35,14 @@ class SaleOrderLine(models.Model):
                 )
             else:
                 product_qty = sol.product_uom_qty
+            rounding = sol.product_packaging.product_uom_id.rounding or 2
             qty_mod = float_round(
-                product_qty % sol.product_packaging.qty,
-                precision_rounding=sol.product_packaging.product_uom_id.rounding,
+                product_qty % sol.product_packaging.qty, precision_rounding=rounding,
             )
             # After the rounding, the value could be equals to sol.product_packaging.qty
             # So just re-apply the '%'
             qty_mod = qty_mod % sol.product_packaging.qty
-            if not float_is_zero(
-                qty_mod, precision_digits=sol.product_packaging.product_uom_id.rounding,
-            ):
+            if not float_is_zero(qty_mod, precision_digits=rounding):
                 # If qty does not fit in package reset package qty
                 sol.product_packaging_qty = 0
             else:
