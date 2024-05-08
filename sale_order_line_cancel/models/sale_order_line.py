@@ -1,4 +1,5 @@
 # Copyright 2018 Okia SPRL
+# Copyright 2018 Jacques-Etienne Baudoux (BCIM) <je@bcim.be>
 # Copyright 2020 ACSONE SA/NV
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
@@ -34,7 +35,7 @@ class SaleOrderLine(models.Model):
                 )
                 == 1
                 and rec.state in ("sale", "done")
-                and rec.move_ids
+                and rec.qty_delivered_method == "stock_move"
             )
 
     @api.depends(
@@ -44,10 +45,8 @@ class SaleOrderLine(models.Model):
     )
     def _compute_product_qty_remains_to_deliver(self):
         for line in self:
-            remaining_to_deliver = (
-                line.product_uom_qty - line.qty_delivered - line.product_qty_canceled
-            )
-            line.product_qty_remains_to_deliver = remaining_to_deliver
+            qty_remaining = line.qty_to_deliver - line.product_qty_canceled
+            line.product_qty_remains_to_deliver = qty_remaining
 
     def _get_moves_to_cancel(self):
         return self.move_ids.filtered(lambda m: m.state not in ("done", "cancel"))
@@ -101,11 +100,11 @@ class SaleOrderLine(models.Model):
         simulate_procured_qty = self.product_uom_qty + qty_to_cancel
         self.ensure_one()
         line = self.with_context(simulate_procured_qty=simulate_procured_qty)
-        previous_sate = line.state
+        previous_state = line.state
         line.state = "sale"
         line._action_launch_stock_rule(simulate_procured_qty)
-        line.state = previous_sate
-        line.product_qty_canceled += qty_to_cancel
+        line.state = previous_state
+        line.product_qty_canceled = line.qty_to_deliver
 
     def _get_qty_procurement(self, previous_product_uom_qty=False):
         return self.env.context.get(
