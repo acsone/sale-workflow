@@ -14,7 +14,7 @@ class StockMove(models.Model):
         )
         res = super()._action_cancel()
         for rec in sale_moves:
-            if rec.state != "cancel":
+            if rec.state != "cancel" or rec.picking_type_id.code != "outgoing":
                 continue
-            rec.sale_line_id.product_qty_canceled = rec.product_uom_qty
+            rec.sale_line_id.product_qty_canceled += rec.product_uom_qty
         return res
