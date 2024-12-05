@@ -29,6 +29,7 @@ class SaleOrder(models.Model):
         required=True,
         help="Specifies the type of sale order: Normal, Blanket, or Call-off.",
         states=READONLY_FIELD_STATES,
+        index=True,
     )
     blanket_order_id = fields.Many2one(
         "sale.order",
