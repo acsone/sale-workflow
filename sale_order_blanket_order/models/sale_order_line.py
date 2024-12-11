@@ -104,6 +104,7 @@ class SaleOrderLine(models.Model):
         "product_id",
         "product_packaging_id",
         "order_partner_id",
+        "state",
     )
     def _check_blanket_product_not_overlapping(self):
         """We check that a product is not part of multiple blanket orders
@@ -128,6 +129,7 @@ class SaleOrderLine(models.Model):
                 "product_id",
                 "product_packaging_id",
                 "order_partner_id",
+                "state",
             ]
         )
         for rec in self:
@@ -136,6 +138,7 @@ class SaleOrderLine(models.Model):
                 order.order_type != "blanket"
                 or not rec.blanket_validity_start_date
                 or not rec.blanket_validity_end_date
+                or rec.state != "sale"
             ):
                 continue
             # here we use a plain SQL query to benefit of the daterange
@@ -162,7 +165,7 @@ class SaleOrderLine(models.Model):
             domain = [
                 ("call_off_remaining_qty", ">", 0),
                 ("order_id", "!=", order.id),
-                ("state", "not in", ["done", "cancel"]),
+                ("state", "not in", ["draft", "cancel"]),
                 ("order_type", "=", "blanket"),
             ]
             for (
