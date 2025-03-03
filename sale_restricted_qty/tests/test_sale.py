@@ -59,7 +59,6 @@ class TestSaleOrderLineMinQty(common.TransactionCase):
                 {
                     "partner_id": self.partner.id,
                     "order_line": [(0, 0, line_values)],
-                    "pricelist_id": 1,
                 }
             )
         line_values["product_uom_qty"] = 12.0
