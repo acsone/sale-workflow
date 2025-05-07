@@ -9,13 +9,13 @@ class SaleOrderLine(models.Model):
     _inherit = "sale.order.line"
 
     discount_total = fields.Monetary(
-        compute="_compute_amount",
+        compute="_compute_discount_total",
         string="Discount Subtotal",
         store=True,
         precompute=True,
     )
     price_total_no_discount = fields.Monetary(
-        compute="_compute_amount",
+        compute="_compute_discount_total",
         string="Subtotal Without Discount",
         store=True,
         precompute=True,
@@ -47,8 +47,6 @@ class SaleOrderLine(models.Model):
                 }
             )
 
-    @api.depends("product_uom_qty", "discount", "price_unit", "tax_id")
-    def _compute_amount(self):
-        res = super(SaleOrderLine, self)._compute_amount()
+    @api.depends("discount", "price_total")
+    def _compute_discount_total(self):
         self._update_discount_display_fields()
-        return res
