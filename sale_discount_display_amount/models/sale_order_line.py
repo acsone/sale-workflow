@@ -30,7 +30,9 @@ class SaleOrderLine(models.Model):
     # thereby influencing the 'discount_total' and 'price_total_no_discount' computations.
     def _has_discount(self):
         self.ensure_one()
-        return not self.currency_id.is_zero(self.discount)
+        if self.currency_id:
+            return not self.currency_id.is_zero(self.discount)
+        return not self.env.company.currency_id.is_zero(self.discount)
 
     def _update_discount_display_fields(self):
         for line in self:

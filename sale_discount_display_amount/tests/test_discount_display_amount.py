@@ -39,3 +39,20 @@ class TestDiscountDisplay(BaseCommon):
         self.so.unlink()
         # Check that the sale order is deleted
         self.assertFalse(self.env["sale.order"].browse(so_id).exists())
+
+    def test_has_discount_with_empty_currency(self):
+        # Ensures no error is thrown when currency_id is empty
+
+        self.so_line.currency_id = self.env["res.currency"]
+        self.so_line.discount = 0.0
+        self.assertFalse(
+            self.so_line._has_discount(),
+            "Expected _has_discount to be False when discount is 0 and currency_id is empty",
+        )
+
+        self.so_line.discount = 10
+        self.assertTrue(
+            self.so_line._has_discount(),
+            "Expected _has_discount to be True when discount is non-zero and currency_id "
+            "is empty",
+        )
