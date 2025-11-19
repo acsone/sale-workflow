@@ -83,6 +83,9 @@ Contributors
   - Foram Darji <fd@oerp.ca>
 
 - Heliconia Solutions Pvt. Ltd. <https://www.heliconia.io>
+- ACSONE SA/NV (http://acsone.eu)
+
+  - Stéphane Mangin <stephane.mangin@acsone.eu>
 
 Maintainers
 -----------
