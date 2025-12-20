@@ -7,8 +7,8 @@ from odoo import api, fields, models
 RESTRICTION_ENABLED = "1"
 RESTRICTION_DISABLED = "0"
 RESTRICTION_SELECTION = [
-    (RESTRICTION_ENABLED, "Yes"),
-    (RESTRICTION_DISABLED, "No"),
+    (RESTRICTION_ENABLED, "Blocking"),
+    (RESTRICTION_DISABLED, "Warning"),
 ]
 
 
@@ -65,7 +65,9 @@ class ProductRestrictedQtyMixin(models.AbstractModel):
         recursive=True,
     )
     sale_restrict_min_qty = fields.Selection(
-        help="Enforce the minimum quantity of product that can be sold.",
+        help="Decide if the minimum quantity constraint is strictly enforced (Blocking) "
+        "or if it only triggers a warning (Warning).\n"
+        "Use 'Warning' if you want to allow exceptions like selling samples or leftover stock.",
         selection=RESTRICTION_SELECTION,
         compute="_compute_sale_restrict_min_qty",
         inverse="_inverse_sale_restrict_min_qty",
@@ -122,7 +124,10 @@ class ProductRestrictedQtyMixin(models.AbstractModel):
         recursive=True,
     )
     sale_restrict_max_qty = fields.Selection(
-        help="Enforce the maximum quantity of product that can be sold.",
+        help="Decide if the maximum quantity constraint is strictly enforced (Blocking) "
+        "or if it only triggers a warning (Warning).\n"
+        "Use 'Warning' if you want to allow large orders that exceed strict policies "
+        "under special conditions.",
         selection=RESTRICTION_SELECTION,
         compute="_compute_sale_restrict_max_qty",
         inverse="_inverse_sale_restrict_max_qty",
@@ -179,7 +184,10 @@ class ProductRestrictedQtyMixin(models.AbstractModel):
         recursive=True,
     )
     sale_restrict_multiple_of_qty = fields.Selection(
-        help="Enforce the multiple-of quantity of product that can be sold.",
+        help="Decide if the multiple-of quantity constraint is strictly enforced (Blocking) "
+        "or if it only triggers a warning (Warning).\n"
+        "Use 'Warning' to allow selling non-standard quantities for special cases like "
+        "clearing leftover stock.",
         selection=RESTRICTION_SELECTION,
         compute="_compute_sale_restrict_multiple_of_qty",
         inverse="_inverse_sale_restrict_multiple_of_qty",
