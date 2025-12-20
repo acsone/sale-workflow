@@ -138,6 +138,9 @@ class SaleOrderLine(models.Model):
     def check_restricted_qty(self):
         failed_lines = []
         for line in self:
+            if line.state not in ("draft", "sent"):
+                continue
+
             qty = line.product_uom._compute_quantity(
                 line.product_uom_qty, line.product_id.uom_id
             )
