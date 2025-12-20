@@ -137,7 +137,8 @@ class TestSaleOrderLine(common.TransactionCase):
             )
 
     def test_auto_populate_min_qty(self):
-        """Test that the quantity is auto-populated with minimum quantity when enforced."""
+        """Test that the quantity is auto-populated with minimum
+        quantity when enforced."""
         product = self.Product.create(
             {
                 "name": "Product",
@@ -145,29 +146,34 @@ class TestSaleOrderLine(common.TransactionCase):
                 "sale_restrict_min_qty": "1",  # Enforced
             }
         )
-        
+
         # Create a sale order first
-        sale_order = self.SaleOrder.create({
-            "partner_id": self.partner.id,
-        })
-        
+        sale_order = self.SaleOrder.create(
+            {
+                "partner_id": self.partner.id,
+            }
+        )
+
         # Test the onchange behavior using new() method (simulates UI interaction)
-        sale_order_line = self.env["sale.order.line"].new({
-            "order_id": sale_order.id,
-            "product_id": product.id,
-        })
-        
+        sale_order_line = self.env["sale.order.line"].new(
+            {
+                "order_id": sale_order.id,
+                "product_id": product.id,
+            }
+        )
+
         # Trigger the onchanges
         sale_order_line._onchange_product_id()
         sale_order_line._onchange_product_id_set_min_qty()
-        
+
         # Check that quantity was auto-populated
         self.assertEqual(sale_order_line.product_uom_qty, 10.0)
         self.assertEqual(sale_order_line.min_qty, 10.0)
         self.assertTrue(sale_order_line.restrict_min_qty)
-        
+
     def test_no_auto_populate_when_not_enforced(self):
-        """Test that quantity is not auto-populated when minimum quantity is not enforced."""
+        """Test that quantity is not auto-populated when minimum
+        quantity is not enforced."""
         product = self.Product.create(
             {
                 "name": "Product",
@@ -175,22 +181,26 @@ class TestSaleOrderLine(common.TransactionCase):
                 "sale_restrict_min_qty": "0",  # Not enforced
             }
         )
-        
+
         # Create a sale order first
-        sale_order = self.SaleOrder.create({
-            "partner_id": self.partner.id,
-        })
-        
+        sale_order = self.SaleOrder.create(
+            {
+                "partner_id": self.partner.id,
+            }
+        )
+
         # Test the onchange behavior
-        sale_order_line = self.env["sale.order.line"].new({
-            "order_id": sale_order.id,
-            "product_id": product.id,
-        })
-        
+        sale_order_line = self.env["sale.order.line"].new(
+            {
+                "order_id": sale_order.id,
+                "product_id": product.id,
+            }
+        )
+
         # Trigger the onchanges
         sale_order_line._onchange_product_id()
         sale_order_line._onchange_product_id_set_min_qty()
-        
+
         # Check that quantity was NOT auto-populated (remains at default 1.0)
         self.assertEqual(sale_order_line.product_uom_qty, 1.0)
         self.assertEqual(sale_order_line.min_qty, 10.0)
