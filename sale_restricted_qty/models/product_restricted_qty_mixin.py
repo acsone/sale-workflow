@@ -307,7 +307,7 @@ class ProductRestrictedQtyMixin(models.AbstractModel):
             )
 
     def _inverse_sale_restrict_min_qty(self):
-        for rec in self.with_context(sale_own_restrict_min_qty=True):
+        for rec in self.with_context(skip_sale_own_restrict_min_qty=True):
             rec.is_sale_own_restrict_min_qty_set = True
             rec.sale_own_restrict_min_qty = rec.sale_restrict_min_qty
 
@@ -357,7 +357,7 @@ class ProductRestrictedQtyMixin(models.AbstractModel):
                 rec.sale_own_max_qty = rec.sale_max_qty
                 rec.is_sale_own_max_qty_set = True
             else:
-                rec.sale_own_max_qty = False
+                rec.sale_own_max_qty = 0.0
                 rec.is_sale_own_max_qty_set = False
 
     @api.onchange("is_sale_own_restrict_max_qty_set")
@@ -484,7 +484,7 @@ class ProductRestrictedQtyMixin(models.AbstractModel):
                 rec.sale_own_multiple_of_qty = rec.sale_multiple_of_qty
                 rec.is_sale_own_multiple_of_qty_set = True
             else:
-                rec.sale_own_multiple_of_qty = False
+                rec.sale_own_multiple_of_qty = 0.0
                 rec.is_sale_own_multiple_of_qty_set = False
 
     @api.onchange("is_sale_own_restrict_multiple_of_qty_set")
