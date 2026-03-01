@@ -6,6 +6,7 @@
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
+from odoo.tools import float_is_zero
 
 from .product_restricted_qty_mixin import RESTRICTION_ENABLED
 
@@ -117,8 +118,12 @@ class SaleOrderLine(models.Model):
             )
             line.is_below_min_qty = line.is_min_qty_set and qty < line.min_qty
             line.is_above_max_qty = line.is_max_qty_set and qty > line.max_qty
+            rounding = line.product_id.uom_id.rounding
             line.is_not_multiple_of_qty = line.is_multiple_of_qty_set and (
-                line.multiple_of_qty != 0 and qty % line.multiple_of_qty != 0
+                line.multiple_of_qty != 0
+                and not float_is_zero(
+                    qty % line.multiple_of_qty, precision_rounding=rounding
+                )
             )
 
     @api.constrains(
@@ -163,11 +168,14 @@ class SaleOrderLine(models.Model):
                     }
                 )
 
+            rounding = line.product_id.uom_id.rounding
             if (
                 line.is_multiple_of_qty_set
                 and line.restrict_multiple_of_qty
                 and line.multiple_of_qty != 0
-                and qty % line.multiple_of_qty != 0
+                and not float_is_zero(
+                    qty % line.multiple_of_qty, precision_rounding=rounding
+                )
             ):
                 failed_constraints.append(
                     _("quantity should be multiple of %(multiple_of_qty)s")
