@@ -3,7 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from odoo import api, fields, models
-
+from odoo.fields import Domain
 
 class SaleOrderLine(models.Model):
     _inherit = "sale.order.line"
@@ -53,14 +53,12 @@ class SaleOrderLine(models.Model):
         # Note: sale_manual_delivery is expected to be a manual.delivery record
         manual_delivery = self.env.context.get("sale_manual_delivery")
         if manual_delivery:
-            domain = [
+            domain = Domain([
                 ("sale_id", "=", self.order_id.id),
                 ("partner_id", "=", manual_delivery.partner_id.id),
-            ]
+            ])
             if manual_delivery.date_planned:
-                domain += [
-                    ("date_planned", "=", manual_delivery.date_planned),
-                ]
+                domain += Domain("date_planned", "=", manual_delivery.date_planned)
             return self.env["procurement.group"].search(domain, limit=1)
         else:
             return super()._get_procurement_group()

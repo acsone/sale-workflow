@@ -4,7 +4,7 @@
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
-
+from odoo.fields import Domain
 
 class ManualDelivery(models.TransientModel):
     _name = "manual.delivery"
@@ -58,9 +58,7 @@ class ManualDelivery(models.TransientModel):
     partner_id = fields.Many2one(
         "res.partner",
         string="Delivery Address",
-        domain="['|',"
-        "('id', '=', commercial_partner_id),"
-        "('parent_id', '=', commercial_partner_id)]",
+        domain=lambda self: Domain.OR([('id', '=', self.commercial_partner_id.id),('parent_id', '=', self.commercial_partner_id.id)]),
         ondelete="cascade",
     )
     carrier_id = fields.Many2one(
@@ -71,7 +69,7 @@ class ManualDelivery(models.TransientModel):
     route_id = fields.Many2one(
         "stock.route",
         string="Use specific Route",
-        domain=[("sale_selectable", "=", True)],
+        domain=Domain("sale_selectable", "=", True),
         ondelete="cascade",
         help="Leave it blank to use the same route that is in the sale line",
     )

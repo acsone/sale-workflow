@@ -5,9 +5,9 @@
     "category": "Sale",
     "author": "Camptocamp SA, Odoo Community Association (OCA)",
     "license": "AGPL-3",
-    "version": "18.0.1.0.1",
+    "version": "19.0.1.0.0",
     "website": "https://github.com/OCA/sale-workflow",
-    "summary": "Create manually your deliveries",
+    "summary": "Create your deliveries manually",
     "depends": ["stock_delivery", "sale_stock", "sales_team"],
     "data": [
         "security/ir.model.access.csv",
@@ -16,7 +16,5 @@
         "wizard/manual_delivery.xml",
     ],
     "installable": True,
-    "application": False,
-    "auto_install": False,
     "pre_init_hook": "pre_init_hook",
 }
