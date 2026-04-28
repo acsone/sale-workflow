@@ -16,7 +16,7 @@ class SaleOrder(models.Model):
     )
 
     has_pending_delivery = fields.Boolean(
-        string="Delivery pending?",
+        "Delivery Pending",
         compute="_compute_delivery_pending",
     )
 

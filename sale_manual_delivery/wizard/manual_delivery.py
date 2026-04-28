@@ -2,7 +2,7 @@
 # Copyright 2021 Iván Todorovich, Camptocamp SA
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from odoo import _, api, fields, models
+from odoo import _, api, fields, models, Command
 from odoo.exceptions import UserError
 from odoo.fields import Domain
 
@@ -32,9 +32,7 @@ class ManualDelivery(models.TransientModel):
             res["commercial_partner_id"] = partner.commercial_partner_id.id
             # Convert to manual.delivery.lines
             res["line_ids"] = [
-                (
-                    0,
-                    0,
+                Command.create(
                     {
                         "order_line_id": line.id,
                         "name": line.name,
@@ -58,7 +56,9 @@ class ManualDelivery(models.TransientModel):
     partner_id = fields.Many2one(
         "res.partner",
         string="Delivery Address",
-        domain=lambda self: Domain.OR([('id', '=', self.commercial_partner_id.id),('parent_id', '=', self.commercial_partner_id.id)]),
+        domain="['|',"
+        "('id', '=', commercial_partner_id),"
+        "('parent_id', '=', commercial_partner_id)]",
         ondelete="cascade",
     )
     carrier_id = fields.Many2one(
@@ -69,7 +69,7 @@ class ManualDelivery(models.TransientModel):
     route_id = fields.Many2one(
         "stock.route",
         string="Use specific Route",
-        domain=Domain("sale_selectable", "=", True),
+        domain=[("sale_selectable", "=", True)],
         ondelete="cascade",
         help="Leave it blank to use the same route that is in the sale line",
     )
@@ -78,7 +78,7 @@ class ManualDelivery(models.TransientModel):
         "manual_delivery_id",
         string="Lines to validate",
     )
-    date_planned = fields.Datetime()
+    date_planned = fields.Date()
 
     def confirm(self):
         """Creates the manual procurements"""
