@@ -5,6 +5,7 @@
 from odoo import models
 from odoo.fields import Domain
 
+
 class StockMove(models.Model):
     _inherit = "stock.move"
 

@@ -6,6 +6,7 @@ from odoo import api, fields, models
 from odoo.fields import Domain
 from odoo.tools.float_utils import float_compare
 
+
 class SaleOrderLine(models.Model):
     _inherit = "sale.order.line"
 
@@ -137,7 +138,9 @@ class SaleOrderLine(models.Model):
             if not group:
                 group = groups.get(line._get_stock_reference_key())
             if not group:
-                group = self.env["stock.reference"].create(line._prepare_reference_vals())
+                group = self.env["stock.reference"].create(
+                    line._prepare_reference_vals()
+                )
                 groups[line._get_stock_reference_key()] = group
 
             values = line._prepare_procurement_values()

@@ -4,6 +4,7 @@
 
 from odoo import fields, models
 
+
 class StockReference(models.Model):
     _inherit = "stock.reference"
 

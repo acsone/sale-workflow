@@ -15,7 +15,7 @@
         "sale_stock_reference_by_line",
     ],
     "data": [
-        'security/manual_delivery.xml',
+        "security/manual_delivery.xml",
         "views/crm_team.xml",
         "views/sale_order.xml",
         "wizard/manual_delivery.xml",

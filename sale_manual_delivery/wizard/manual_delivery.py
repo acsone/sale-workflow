@@ -2,9 +2,9 @@
 # Copyright 2021 Iván Todorovich, Camptocamp SA
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from odoo import _, api, fields, models, Command
+from odoo import Command, api, fields, models
 from odoo.exceptions import UserError
-from odoo.fields import Domain
+
 
 class ManualDelivery(models.TransientModel):
     _name = "manual.delivery"
@@ -24,7 +24,7 @@ class ManualDelivery(models.TransientModel):
             sale_ids = self.env.context["active_ids"] or []
             sale_lines = self.env["sale.order"].browse(sale_ids).mapped("order_line")
         if len(sale_lines.mapped("order_id.partner_id")) > 1:
-            raise UserError(_("Please select one partner at a time"))
+            raise UserError(self.env._("Please select one partner at a time"))
         if sale_lines:
             # Get partner from those lines
             partner = sale_lines.mapped("order_id.partner_id")

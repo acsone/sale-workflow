@@ -1,13 +1,13 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 from datetime import datetime
-from odoo import Command
+
 from dateutil.relativedelta import relativedelta
 
+from odoo import Command
 from odoo.exceptions import UserError
-
-from odoo.addons.sale.tests.common import SaleCommon
 from odoo.tests import users
 
+from odoo.addons.sale.tests.common import SaleCommon
 
 
 class TestSaleStock(SaleCommon):
@@ -41,25 +41,33 @@ class TestSaleStock(SaleCommon):
     def _get_order_line_vals(self, qty=5, product=False):
         if not product:
             product = self.product
-        return Command.create({
-            "name": product.name,
-            "product_id": product.id,
-            "product_uom_qty": qty,
-            "product_uom_id": product.uom_id.id,
-            "price_unit": product.list_price,
-        })
+        return Command.create(
+            {
+                "name": product.name,
+                "product_id": product.id,
+                "product_uom_qty": qty,
+                "product_uom_id": product.uom_id.id,
+                "price_unit": product.list_price,
+            }
+        )
 
-    def _create_order(self, qty=5, product=False, manual_delivery=True, order_line_vals=False):
+    def _create_order(
+        self, qty=5, product=False, manual_delivery=True, order_line_vals=False
+    ):
         if not order_line_vals:
             order_line_vals = [self._get_order_line_vals(qty, product)]
-        return self.env["sale.order"].with_user(self.sale_user).create(
-            {
-                "partner_id": self.partner.id,
-                "partner_invoice_id": self.partner.id,
-                "partner_shipping_id": self.partner.id,
-                "order_line": order_line_vals,
-                "manual_delivery": manual_delivery,
-            }
+        return (
+            self.env["sale.order"]
+            .with_user(self.sale_user)
+            .create(
+                {
+                    "partner_id": self.partner.id,
+                    "partner_invoice_id": self.partner.id,
+                    "partner_shipping_id": self.partner.id,
+                    "order_line": order_line_vals,
+                    "manual_delivery": manual_delivery,
+                }
+            )
         )
 
     @users("salesman")
@@ -227,7 +235,7 @@ class TestSaleStock(SaleCommon):
         )
         line_vals = [
             self._get_order_line_vals(qty=10),
-            self._get_order_line_vals(qty=10, product=self.product2)
+            self._get_order_line_vals(qty=10, product=self.product2),
         ]
         order = self._create_order(order_line_vals=line_vals)
 
@@ -304,7 +312,7 @@ class TestSaleStock(SaleCommon):
         """
         line_vals = [
             self._get_order_line_vals(qty=1),
-            self._get_order_line_vals(qty=2, product=self.product2)
+            self._get_order_line_vals(qty=2, product=self.product2),
         ]
         order = self._create_order(order_line_vals=line_vals)
         # confirm our standard so, check the picking
