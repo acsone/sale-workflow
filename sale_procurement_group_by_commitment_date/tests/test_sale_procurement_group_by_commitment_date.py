@@ -17,6 +17,7 @@ class TestSaleMultiPickingByCommitmentDate(TransactionCase):
         And prepare procurements
         """
         super().setUpClass()
+        cls.env.company.sale_group_by_commitment_date = True
         sale_obj = cls.env["sale.order"]
         cls.move_ob = cls.env["stock.move"]
         cls.proc_group_obj = cls.env["procurement.group"]

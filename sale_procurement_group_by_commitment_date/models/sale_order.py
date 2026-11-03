@@ -21,6 +21,8 @@ class SaleOrderLine(models.Model):
         procurement groups. The higher the priority number is the more
         preference the criteria has.
         """
+        if not self.order_id.company_id.sale_group_by_commitment_date:
+            return super()._get_procurement_group_key()
         priority = 12
         key = super()._get_procurement_group_key()
         # Check priority

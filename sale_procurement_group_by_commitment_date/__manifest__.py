@@ -12,4 +12,5 @@
     "license": "AGPL-3",
     "depends": ["sale_order_line_date", "sale_procurement_group_by_line"],
     "installable": True,
+    "data": ["views/res_config_settings.xml"],
 }
